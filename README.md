@@ -1,6 +1,12 @@
 # ChessRepertoireGenerator
 
-## Configurazione
+## How to
+```bash
+cd src/
+python main.py example.yaml
+```
+
+## Configurazione (.yaml)
 
 ```yaml
 # Variante di scacchi per cui generare il repertorio (le alternative sono anti-chess ecc...)
