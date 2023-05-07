@@ -121,7 +121,10 @@ class RepertoireBuilder:
             return -9999
 
     def __set_move_comment(self, move):
-        comment = f"{move['perc']}% ({move['tot_games']}) -- {move['eval']} -- {move['white']}/{move['draws']}/{move['black']}"
+        if(move['eval'] != -99.99):
+            comment = f"{move['perc']}% ({move['tot_games']}) -- {move['eval']} -- {move['white']}/{move['draws']}/{move['black']}"
+        else:
+            comment = f"{move['perc']}% ({move['tot_games']}) -- {move['white']}/{move['draws']}/{move['black']}"
         move['comment'] = comment
 
     def __compute_evaluations(self, node, tree_move, total_games):
@@ -171,11 +174,11 @@ class RepertoireBuilder:
                 reverse=True)
 
             for m in sorted_moves:
-                # se la mossa non è tra le prime tre del motore la scarto
+                # scarto la mossa non è tra le prime tre del motore
                 if m["eval_pos"] > self.config.EngineLines:
                     continue
-                # se la mossa ha una valutazione del motore non accettabile (<
-                # -1 e tocca la bianco o > 1 e tocca al nero) la scarto
+                # scarto la mossa ha una valutazione del motore non accettabile (<
+                # -1 e tocca la bianco o > 1 e tocca al nero)
                 if (bIsWhiteToMove and m['eval'] < - self.config.EngineThreshold) or (
                         not bIsWhiteToMove and m['eval'] > self.config.EngineThreshold):
                     continue
