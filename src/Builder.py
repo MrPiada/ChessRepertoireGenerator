@@ -29,7 +29,6 @@ class RepertoireBuilder:
         }
 
     def GenerateReportoire(self):
-
         print("Create pgn game")
         game = chess.pgn.Game()
         game.headers["Event"] = self.config.Event
@@ -56,8 +55,15 @@ class RepertoireBuilder:
 
         # eseguo la mossa richiesta
         child_node = node.add_variation(chess.Move.from_uci(move))
-        
-        print("------- ", child_node.ply(), " ", move, "\n", child_node.board(), "\n")
+
+        print(
+            "------- ",
+            child_node.ply(),
+            " ",
+            move,
+            "\n",
+            child_node.board(),
+            "\n")
 
         child_node.comment = move_comment
         eval = self.__get_cloud_eval(child_node)
