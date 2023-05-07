@@ -8,8 +8,8 @@ class Config:
         
         # Lichess API call
         self.variant = config_data.get('variant', "standard")
-        self.speeds = config_data.get('speeds', ["blitz","rapid","classical"])
-        self.ratings = config_data.get('ratings', ["2200","2500"])
+        self.speeds = ",".join(config_data.get('speeds', ["blitz","rapid","classical"]))
+        self.ratings = ",".join(config_data.get('ratings', ["2200","2500"]))
         
         # Pgn info
         self.PgnName = config_data.get('PgnName', "Repertoire.pgn")
