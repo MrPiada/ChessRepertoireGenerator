@@ -121,7 +121,7 @@ class RepertoireBuilder:
             return -9999
 
     def __set_move_comment(self, move):
-        if(move['eval'] != -99.99):
+        if (move['eval'] != -99.99):
             comment = f"{move['perc']}% ({move['tot_games']}) -- {move['eval']} -- {move['white']}/{move['draws']}/{move['black']}"
         else:
             comment = f"{move['perc']}% ({move['tot_games']}) -- {move['white']}/{move['draws']}/{move['black']}"
@@ -148,7 +148,7 @@ class RepertoireBuilder:
         fen = new_board.fen()
 
         tree_move['eval'] = self.__get_cloud_eval(fen) / 100.
-        
+
         self.__set_move_comment(tree_move)
 
     def __filter_moves(self, move_list, bIsWhiteToMove, bIsWhiteRepertoire):
@@ -174,14 +174,15 @@ class RepertoireBuilder:
                 reverse=True)
 
             for m in sorted_moves:
-                # scarto la mossa non è tra le prime tre del motore
-                if m["eval_pos"] > self.config.EngineLines:
-                    continue
-                # scarto la mossa ha una valutazione del motore non accettabile (<
-                # -1 e tocca la bianco o > 1 e tocca al nero)
-                if (bIsWhiteToMove and m['eval'] < - self.config.EngineThreshold) or (
-                        not bIsWhiteToMove and m['eval'] > self.config.EngineThreshold):
-                    continue
+                if (m['eval'] != -9999):
+                    # scarto la mossa non è tra le prime tre del motore
+                    if m["eval_pos"] > self.config.EngineLines:
+                        continue
+                    # scarto la mossa ha una valutazione del motore non accettabile (<
+                    # -1 e tocca la bianco o > 1 e tocca al nero)
+                    if (bIsWhiteToMove and m['eval'] < - self.config.EngineThreshold) or (
+                            not bIsWhiteToMove and m['eval'] > self.config.EngineThreshold):
+                        continue
                 ret_moves.append(m)
                 return ret_moves  # se tocca al giocatore considero solo una mossa alla volta
         else:
