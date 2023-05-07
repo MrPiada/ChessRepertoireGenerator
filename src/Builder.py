@@ -29,7 +29,7 @@ class RepertoireBuilder:
         }
 
     def GenerateReportoire(self):
-        print("Create pgn game")
+        print("\n\t\tSTART\n")
         game = chess.pgn.Game()
         game.headers["Event"] = self.config.Event
 
@@ -62,17 +62,18 @@ class RepertoireBuilder:
             " ",
             move,
             "\n",
-            child_node.board(),
-            "\n")
+            child_node.board()
+            )
 
         child_node.comment = move_comment
-        eval = self.__get_cloud_eval(child_node)
+        eval = self.__get_cloud_eval(child_node.board().fen())
 
         if (eval != -9999):
             child_node.set_eval(chess.engine.PovScore(Cp(eval), chess.WHITE))
 
         # interrompo la ricerca se raggiungo la profondità massima
         if (child_node.ply() > self.config.MaxDepth):
+            print("----- MAX DEPTH")
             return
 
         # ottengo il codice fen della posizione
@@ -86,14 +87,16 @@ class RepertoireBuilder:
 
         # comment = self.__get_comment(tree)
 
-        for move in self.__GetCandidateMoves(child_node, tree):
+        candidate_moves = self.__GetCandidateMoves(child_node, tree)
+        print("#CandidateMoves: ", len(candidate_moves))
+        for move in candidate_moves:
             self.__make_move(
                 move['uci'],
                 child_node,
                 "")
 
-    def __get_cloud_eval(self, node):
-        self.ApiCloudEvalParams['fen'] = node.board().fen()
+    def __get_cloud_eval(self, fen):
+        self.ApiCloudEvalParams['fen'] = fen
         response = requests.get(
             self.ApiCloudEvalUrl,
             params=self.ApiCloudEvalParams)
@@ -130,8 +133,16 @@ class RepertoireBuilder:
         tree_move['strongest_practical'] = tree_move['white'] if (
             node.board().turn) else tree_move['black']
         tree_move['perc'] = (int)((float)(tot) / total_games * 100.)
-        n = node.add_variation(chess.Move.from_uci(tree_move['uci']))
-        tree_move['eval'] = self.__get_cloud_eval(n) / 100.
+        # n = node.add_variation(chess.Move.from_uci(tree_move['uci']))
+        
+        
+        # crea un nodo con la posizione iniziale
+        board = node.board()
+        new_board = board.copy()
+        new_board.push(chess.Move.from_uci(tree_move['uci']))
+        fen = new_board.fen()
+
+        tree_move['eval'] = self.__get_cloud_eval(fen) / 100.
 
     def __filter_moves(self, move_list, bIsWhiteToMove, bIsWhiteRepertoire):
         """filtra le mosse per trovare o le candidate per il giocatore oppure quelle da considerare dagli avversari

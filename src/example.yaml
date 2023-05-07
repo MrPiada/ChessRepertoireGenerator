@@ -4,13 +4,13 @@ speeds:
   - rapid
   - classical
 ratings:
+  - 2000
   - 2200
-  - 2500
 PgnName: RepertoireExample.pgn
 Event: ChessRepertoireGenerator
 Color: White
 WhiteStartingMove: e2e4
-MaxDepth: 10
+MaxDepth: 5
 EngineLines: 3
 EngineThreshold: 1
 FreqThreshold: 80
