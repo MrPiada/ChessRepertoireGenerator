@@ -33,6 +33,3 @@ class Config:
         # considero mosse fino al punto in cui ho coperto almeno l'80% delle
         # mosse giocate
         self.FreqThreshold = config_data.get('FreqThreshold', 80)
-
-        self.boolean_field = config_data.get('boolean_field', False)
-        self.numeric_field = config_data.get('numeric_field', 0)

@@ -1,0 +1,16 @@
+variant: standard
+speeds:
+  - blitz
+  - rapid
+  - classical
+ratings:
+  - 2200
+  - 2500
+PgnName: RepertoireExample.pgn
+Event: ChessRepertoireGenerator
+Color: White
+WhiteStartingMove: g2g4
+MaxDepth: 5
+EngineLines: 3
+EngineThreshold: 1
+FreqThreshold: 80
