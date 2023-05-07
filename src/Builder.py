@@ -2,13 +2,14 @@ import requests
 import chess.pgn
 import chess
 import json
+import sys
 
 from chess.engine import Cp
 from Config import Config
 from Utils import Color
 
 
-class MyClass:
+class RepertoireBuilder:
     def __init__(self, config):
         self.config = config
         self.bIsWhiteRepertoire = (self.config.Color == Color.WHITE)
@@ -45,12 +46,24 @@ class MyClass:
         pass
 
     def __make_move(self, move, node, move_comment):
+
+        # TODO: stampare la mossa attualmente considerata
+        # board = chess.Board()
+        # san_move = board.san(node.move)
+        # sys.stdout.write('\r' + str(node.ply()) + '\t' + str(san_move)
+        #                  )
+        # sys.stdout.flush()
+
         # eseguo la mossa richiesta
         child_node = node.add_variation(chess.Move.from_uci(move))
+        
+        print("------- ", child_node.ply(), " ", move, "\n", child_node.board(), "\n")
+
         child_node.comment = move_comment
         eval = self.__get_cloud_eval(child_node)
 
-        child_node.set_eval(chess.engine.PovScore(Cp(42), chess.WHITE))
+        if (eval != -9999):
+            child_node.set_eval(chess.engine.PovScore(Cp(eval), chess.WHITE))
 
         # interrompo la ricerca se raggiungo la profondità massima
         if (child_node.ply() > self.config.MaxDepth):
@@ -69,16 +82,23 @@ class MyClass:
 
         for move in self.__GetCandidateMoves(child_node, tree):
             self.__make_move(
-                tree['moves'][0]['uci'],
+                move['uci'],
                 child_node,
-                "",
-                self.config.MaxDepth)
+                "")
 
     def __get_cloud_eval(self, node):
         self.ApiCloudEvalParams['fen'] = node.board().fen()
-        response = requests.get(self.ApiCloudEvalUrl, params=params_eval)
+        response = requests.get(
+            self.ApiCloudEvalUrl,
+            params=self.ApiCloudEvalParams)
         tree = json.loads(response.content.decode())
-        return tree['pvs'][0]['cp']
+        # Se esiste la valutazione in cloud della mossa
+        if ('pvs' in tree):
+            if ('mate' in tree['pvs'][0]):
+                return tree['pvs'][0]['mate'] * 1000
+            return tree['pvs'][0]['cp']
+        else:
+            return -9999
 
     def __get_comment(self, tree):
         # Commento dello score
@@ -130,12 +150,13 @@ class MyClass:
                 reverse=True)
 
             for m in sorted_moves:
-                if m["eval_pos"] > 3:  # se la mossa non è tra le prime tre del motore la scarto
+                # se la mossa non è tra le prime tre del motore la scarto
+                if m["eval_pos"] > self.config.EngineLines:
                     continue
                 # se la mossa ha una valutazione del motore non accettabile (<
                 # -1 e tocca la bianco o > 1 e tocca al nero) la scarto
-                if (bIsWhiteToMove and m['eval'] < -
-                        1) or (not bIsWhiteToMove and m['eval'] > 1):
+                if (bIsWhiteToMove and m['eval'] < - self.config.EngineThreshold) or (
+                        not bIsWhiteToMove and m['eval'] > self.config.EngineThreshold):
                     continue
                 ret_moves.append(m)
                 return ret_moves  # se tocca al giocatore considero solo una mossa alla volta
@@ -150,7 +171,7 @@ class MyClass:
                 perc_sum += m["perc"]
                 # considero mosse fino al punto in cui ho coperto almeno l'80%
                 # delle mosse giocate
-                if (perc_sum > 80):
+                if (perc_sum > self.config.FreqThreshold):
                     return ret_moves
 
         return ret_moves
@@ -159,6 +180,13 @@ class MyClass:
         total_games = tree['white'] + tree['draws'] + tree['black']
         for move in tree['moves']:
             self.__compute_evaluations(node, move, total_games)
+
+        # Rimuovo tutte le linee che non hanno valutazione cloud di lichess
+        tree['moves'] = list(
+            filter(
+                lambda x: x['eval'] != -
+                9999,
+                tree['moves']))
 
         eval_sorted_moves = sorted(tree['moves'], key=lambda x: x["eval"])
 

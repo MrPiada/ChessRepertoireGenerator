@@ -13,7 +13,10 @@ class Config:
             config_data.get(
                 'speeds', [
                     "blitz", "rapid", "classical"]))
-        self.ratings = ",".join(config_data.get('ratings', ["2200", "2500"]))
+        self.ratings = ",".join(
+            str(r) for r in config_data.get(
+                'ratings', [
+                    "2200", "2500"]))
 
         # Pgn info
         self.PgnName = config_data.get('PgnName', "Repertoire.pgn")

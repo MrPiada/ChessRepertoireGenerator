@@ -9,8 +9,8 @@ ratings:
 PgnName: RepertoireExample.pgn
 Event: ChessRepertoireGenerator
 Color: White
-WhiteStartingMove: g2g4
-MaxDepth: 5
+WhiteStartingMove: e2e4
+MaxDepth: 10
 EngineLines: 3
 EngineThreshold: 1
 FreqThreshold: 80
