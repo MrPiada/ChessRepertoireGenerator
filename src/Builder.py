@@ -30,6 +30,13 @@ class RepertoireBuilder:
         }
 
         self.start_time = 0
+        
+        # TODO: creare una lista self.stats = [],
+        #       la lista sarà riempita con un dizionario contenente
+        #       la mossa (in formato san), score del bianco/patta/nero, ply, valutazione motore
+        # TODO: sfruttare la lista stat per fare grafici in funzione del ply per vedere la qualità del repertorio
+        # TODO: usare plotly in modo che ogni punto possa avere il tooltip che spiega la mossa
+        # TODO: colorare di nero i punti delle mosse del nero e di bianco i punti delle mosse del bianco
 
     def GenerateReportoire(self):
         print("\n\t\tSTART\n")
