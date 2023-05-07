@@ -50,14 +50,6 @@ class RepertoireBuilder:
         pass
 
     def __make_move(self, move, node, move_comment):
-
-        # TODO: stampare la mossa attualmente considerata
-        # board = chess.Board()
-        # san_move = board.san(node.move)
-        # sys.stdout.write('\r' + str(node.ply()) + '\t' + str(san_move)
-        #                  )
-        # sys.stdout.flush()
-
         # eseguo la mossa richiesta
         child_node = node.add_variation(chess.Move.from_uci(move))
 
