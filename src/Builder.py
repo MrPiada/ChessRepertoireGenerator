@@ -3,6 +3,7 @@ import chess.pgn
 import chess
 import json
 import sys
+import time
 
 from chess.engine import Cp
 from Config import Config
@@ -28,8 +29,12 @@ class RepertoireBuilder:
             "fen": None
         }
 
+        self.start_time = 0
+
     def GenerateReportoire(self):
         print("\n\t\tSTART\n")
+        self.start_time = time.time()
+
         game = chess.pgn.Game()
         game.headers["Event"] = self.config.Event
 
@@ -56,14 +61,22 @@ class RepertoireBuilder:
         # eseguo la mossa richiesta
         child_node = node.add_variation(chess.Move.from_uci(move))
 
+        elapsed_time = time.time() - self.start_time
+        minutes, seconds = divmod(elapsed_time, 60)
+        strTime = f"{minutes:.0f}m{seconds:.0f}s"
         print(
+            "\n(",
+            strTime,
+            ") ",
             "------- ",
             child_node.ply(),
             " ",
             move,
+            " ",
+            move_comment,
             "\n",
             child_node.board()
-            )
+        )
 
         child_node.comment = move_comment
         eval = self.__get_cloud_eval(child_node.board().fen())
@@ -85,15 +98,13 @@ class RepertoireBuilder:
         # parsing della response
         tree = json.loads(response.content.decode())
 
-        # comment = self.__get_comment(tree)
-
         candidate_moves = self.__GetCandidateMoves(child_node, tree)
         print("#CandidateMoves: ", len(candidate_moves))
         for move in candidate_moves:
             self.__make_move(
                 move['uci'],
                 child_node,
-                "")
+                move['comment'])
 
     def __get_cloud_eval(self, fen):
         self.ApiCloudEvalParams['fen'] = fen
@@ -109,17 +120,9 @@ class RepertoireBuilder:
         else:
             return -9999
 
-    def __get_comment(self, tree):
-        # Commento dello score
-        w = tree['white']
-        b = tree['black']
-        d = tree['draws']
-        tot = w + b + d
-        perc_w = (int)(w / tot * 100)
-        perc_b = (int)(b / tot * 100)
-        perc_d = (int)(d / tot * 100)
-        comment = f"{perc_w}/{perc_d}/{perc_b}"
-        return comment
+    def __set_move_comment(self, move):
+        comment = f"{move['perc']}% ({move['tot_games']}) -- {move['eval']} -- {move['white']}/{move['draws']}/{move['black']}"
+        move['comment'] = comment
 
     def __compute_evaluations(self, node, tree_move, total_games):
         w = tree_move['white']
@@ -134,8 +137,7 @@ class RepertoireBuilder:
             node.board().turn) else tree_move['black']
         tree_move['perc'] = (int)((float)(tot) / total_games * 100.)
         # n = node.add_variation(chess.Move.from_uci(tree_move['uci']))
-        
-        
+
         # crea un nodo con la posizione iniziale
         board = node.board()
         new_board = board.copy()
@@ -143,6 +145,8 @@ class RepertoireBuilder:
         fen = new_board.fen()
 
         tree_move['eval'] = self.__get_cloud_eval(fen) / 100.
+        
+        self.__set_move_comment(tree_move)
 
     def __filter_moves(self, move_list, bIsWhiteToMove, bIsWhiteRepertoire):
         """filtra le mosse per trovare o le candidate per il giocatore oppure quelle da considerare dagli avversari
