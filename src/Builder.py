@@ -4,6 +4,7 @@ import chess
 import json
 import sys
 import time
+import pandas as pd
 
 from chess.engine import Cp
 from Config import Config
@@ -30,13 +31,26 @@ class RepertoireBuilder:
         }
 
         self.start_time = 0
-        
+
+        self.stats = pd.DataFrame(
+            columns=[
+                'ply',
+                'move',
+                'IsWhiteToMove',
+                'whitePerc',
+                'drawPerc',
+                'blackPerc',
+                'totGames',
+                'percGames',
+                'engineEval'])
+
         # TODO: creare una lista self.stats = [],
         #       la lista sarà riempita con un dizionario contenente
         #       la mossa (in formato san), score del bianco/patta/nero, ply, valutazione motore
         # TODO: sfruttare la lista stat per fare grafici in funzione del ply per vedere la qualità del repertorio
         # TODO: usare plotly in modo che ogni punto possa avere il tooltip che spiega la mossa
-        # TODO: colorare di nero i punti delle mosse del nero e di bianco i punti delle mosse del bianco
+        # TODO: colorare di nero i punti delle mosse del nero e di bianco i
+        # punti delle mosse del
 
     def GenerateReportoire(self):
         print("\n\t\tSTART\n")
@@ -55,6 +69,8 @@ class RepertoireBuilder:
             game.accept(exporter)
 
         pass
+    
+        return self.stats
 
     def __make_move(self, move, node, move_comment):
         # eseguo la mossa richiesta
@@ -100,6 +116,19 @@ class RepertoireBuilder:
         candidate_moves = self.__GetCandidateMoves(child_node, tree)
         print("#CandidateMoves: ", len(candidate_moves))
         for move in candidate_moves:
+
+            self.stats.loc[len(self.stats)] = [
+                child_node.ply() + 1,
+                move['san'],
+                child_node.board().turn,
+                move['white'],
+                move['draws'],
+                move['black'],
+                move['tot_games'],
+                move['perc'],
+                move['eval']
+            ]
+
             self.__make_move(
                 move['uci'],
                 child_node,
