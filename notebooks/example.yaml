@@ -1,16 +1,16 @@
 variant: standard
 speeds:
   - blitz
-  - rapid
 ratings:
+  - 1800
   - 2000
   - 2200
 PgnName: RepertoireExample.pgn
 Event: ChessRepertoireGenerator
 Color: White
-WhiteStartingMove: b2b4
-MaxDepth: 5
-EngineLines: 3
-EngineThreshold: 0.8
+WhiteStartingMove: c2c4
+MaxDepth: 21
+EngineLines: 5
+EngineThreshold: 1.2
 
 FreqThreshold: 85

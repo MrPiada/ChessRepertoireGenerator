@@ -231,34 +231,44 @@ class RepertoireBuilder:
 
     def __GetCandidateMoves(self, node, tree):
         total_games = tree['white'] + tree['draws'] + tree['black']
+        
+        if(len(tree['moves']) == 0):
+            print("CandidateMoves --> no tree moves at the beginning")
+            
         for move in tree['moves']:
             self.__compute_evaluations(node, move, total_games)
 
         # Rimuovo tutte le linee che non hanno valutazione cloud di lichess
-        tree['moves'] = list(
+        evalutad_moves = list(
             filter(
                 lambda x: x['eval'] != -
                 9999,
                 tree['moves']))
 
-        eval_sorted_moves = sorted(tree['moves'], key=lambda x: x["eval"])
+        eval_sorted_moves = []
+        if(len(evalutad_moves) == 0):
+            print("CandidateMoves --> no evaluated moves, use all of them")
+            evalutad_moves = tree['moves']
+            eval_sorted_moves = sorted(evalutad_moves, key=lambda x: x["eval"])
+        else:
+            eval_sorted_moves = tree['moves']
 
         toMove_sorted_moves = []  # score relativo da db in base a chi deve muovere
 
         bIsWhiteToMove = node.board().turn
         if (bIsWhiteToMove):
             toMove_sorted_moves = sorted(
-                tree['moves'], key=lambda x: x["white"], reverse=True)
+                evalutad_moves, key=lambda x: x["white"], reverse=True)
         else:
             toMove_sorted_moves = sorted(
-                tree['moves'], key=lambda x: x["black"], reverse=True)
+                evalutad_moves, key=lambda x: x["black"], reverse=True)
 
-        for i, item in enumerate(tree['moves']):
+        for i, item in enumerate(evalutad_moves):
             item["freq_pos"] = i
             item["eval_pos"] = eval_sorted_moves.index(item)
             item["dbscore_pos"] = toMove_sorted_moves.index(item)
 
         return self.__filter_moves(
-            tree['moves'],
+            evalutad_moves,
             bIsWhiteToMove=bIsWhiteToMove,
             bIsWhiteRepertoire=self.bIsWhiteRepertoire)
