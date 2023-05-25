@@ -1,6 +1,7 @@
 variant: standard
 speeds:
   - blitz
+  - rapid
 ratings:
   - 1800
   - 2000
