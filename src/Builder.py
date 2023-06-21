@@ -110,6 +110,10 @@ class RepertoireBuilder:
         # eseguo la chiamata all'API lichess
         response = requests.get(self.ApiDbUrl, params=self.ApiDbParams)
 
+        while(response.status_code == 429):
+            time.sleep(60)
+            response = requests.get(self.ApiDbUrl, params=self.ApiDbParams)
+
         # parsing della response
         tree = json.loads(response.content.decode())
 
@@ -136,9 +140,10 @@ class RepertoireBuilder:
 
     def __get_cloud_eval(self, fen):
         self.ApiCloudEvalParams['fen'] = fen
-        response = requests.get(
-            self.ApiCloudEvalUrl,
-            params=self.ApiCloudEvalParams)
+        response = requests.get(self.ApiCloudEvalUrl, params=self.ApiCloudEvalParams)
+        while(response.status_code == 429):
+            time.sleep(60)
+            response = requests.get(self.ApiCloudEvalUrl, params=self.ApiCloudEvalParams)
         tree = json.loads(response.content.decode())
         # Se esiste la valutazione in cloud della mossa
         if ('pvs' in tree):
