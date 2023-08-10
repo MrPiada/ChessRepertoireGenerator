@@ -207,7 +207,9 @@ class ACanvas(object):
                  shape: Sequence[Number] = None,
                  margins: Sequence[Number] = None,
                  xlim: Sequence[Number] = None,
-                 ylim: Sequence[Number] = None):
+                 ylim: Sequence[Number] = None,
+                 xticks_to_int=False,
+                 yticks_to_int=False):
         """ Constructor
         parameters
         ----------
@@ -222,6 +224,10 @@ class ACanvas(object):
 
         ylim: tuple of 2 floats
             limits of the yaxis
+
+        xticks_to_int: specify how to print xticks on axis
+
+        yticks_to_int: specify how to print yticks on axis
         """
         self.shape = shape or (50, 20)
         self.margins = margins or (0.05, 0.1)
@@ -229,6 +235,8 @@ class ACanvas(object):
         self._ylim = ylim or [0, 1]
         self.auto_adjust = True
         self.margin_factor = 1
+        self.xticks_to_int = xticks_to_int
+        self.yticks_to_int = yticks_to_int
 
     @property
     def x_size(self) -> int:
@@ -359,40 +367,44 @@ class ACanvas(object):
     def extent_str(self, margin: Number = None) -> Tuple[str, str, str, str]:
 
         def transform(val: Number, fmt: str) -> str:
-            if abs(val) < 1:
-                _str = "%+.2g" % val
-            elif fmt is not None:
+            if fmt is not None:
                 _str = fmt % val
+            elif abs(val) < 1:
+                _str = "%+.2g" % val
             else:
                 _str = None
             return _str
 
         e = self.extent(margin)
 
-        xfmt = self.x_str()
-        yfmt = self.y_str()
+        if self.xticks_to_int:
+            xfmt = self.x_str_int()
+        else:
+            xfmt = self.x_str()
+
+        if self.yticks_to_int:
+            yfmt = self.y_str_int()
+        else:
+            yfmt = self.y_str()
+
         return transform(
             e[0], xfmt), transform(
             e[1], xfmt), transform(
             e[2], yfmt), transform(
                 e[3], yfmt)
 
+    def x_str_int(self) -> str:
+        return "%.0f"
+
+    def y_str_int(self) -> str:
+        return "%.0f"
+
     def x_str(self) -> str:
-        if self.x_size < 16:
-            x_str = None
-        elif self.x_size < 23:
-            x_str = "%+.2g"
-        else:
-            x_str = "%+g"
+        x_str = "%+.2g"
         return x_str
 
     def y_str(self) -> str:
-        if self.x_size < 8:
-            y_str = None
-        elif self.x_size < 11:
-            y_str = "%+.2g"
-        else:
-            y_str = "%+g"
+        y_str = "%+.2g"
         return y_str
 
     def coords_inside_buffer(self, x: Number, y: Number) -> bool:
@@ -433,9 +445,12 @@ class ACanvas(object):
 
         ts = sorted([0.0,
                      1.0,
-                     float(e[0] - line_pt_1[0]) / (line_pt_2[0] - line_pt_1[0]),
-                     float(e[2] - line_pt_1[0]) / (line_pt_2[0] - line_pt_1[0]),
-                     float(e[1] - line_pt_1[1]) / (line_pt_2[1] - line_pt_1[1]),
+                     float(e[0] - line_pt_1[0]) /
+                     (line_pt_2[0] - line_pt_1[0]),
+                     float(e[2] - line_pt_1[0]) /
+                     (line_pt_2[0] - line_pt_1[0]),
+                     float(e[1] - line_pt_1[1]) /
+                     (line_pt_2[1] - line_pt_1[1]),
                      float(e[3] - line_pt_1[1]) / (line_pt_2[1] - line_pt_1[1])])
 
         if (ts[2] < 0) or (ts[2] >= 1) or (ts[3] < 0) or (ts[2] >= 1):
@@ -459,9 +474,17 @@ class AFigure(object):
                  ylim: Sequence[Number] = None,
                  xlabel: str = None,
                  ylabel: str = None,
+                 xticks_to_int=False,
+                 yticks_to_int=False,
                  **kwargs):
 
-        self.canvas = ACanvas(shape, margins=margins, xlim=xlim, ylim=ylim)
+        self.canvas = ACanvas(
+            shape,
+            margins=margins,
+            xlim=xlim,
+            ylim=ylim,
+            xticks_to_int=xticks_to_int,
+            yticks_to_int=yticks_to_int)
         self.draw_axes = draw_axes
         self.new_line = newline
         self.plot_labels = plot_labels
@@ -471,6 +494,9 @@ class AFigure(object):
         self.y_axis_symbol = u'\u2502'  # "|"
         self.x_axis_label = xlabel
         self.y_axis_label = ylabel
+        self.xticks_to_int = xticks_to_int
+        self.yticks_to_int = yticks_to_int
+
         self.data = []
 
     def xlim(self, vmin: Number = None,
@@ -508,11 +534,7 @@ class AFigure(object):
             zero_y = self.canvas.y_size - 1
         for x in range(self.canvas.x_size):
             self.output_buffer[x][zero_y] = self.x_axis_symbol  # u'\u23bc'
-       
-       # Aggiunta del carattere ">" dopo il loop
-        last_x = self.canvas.x_size - 1  # Ottieni l'indice dell'ultimo elemento
-        self.output_buffer[last_x][zero_y] = ">"  # Aggiungi ">" alla posizione successiva
-        
+        self.output_buffer[self.canvas.x_size - 1][zero_y] = '>'
 
         self.output_buffer[zero_x][zero_y] = self.tickSymbols  # "+"
 
@@ -581,6 +603,9 @@ class AFigure(object):
         self.output_buffer[max_x_coord][y_zero_coord] = self.tickSymbols
 
         min_x_str, max_x_str, min_y_str, max_y_str = self.canvas.extent_str()
+
+        print("\n\n", min_x_str, max_x_str, min_y_str, max_y_str, "\n\n")
+
         if (self.canvas.x_str() is not None):
             for i, c in enumerate(min_x_str):
                 self.output_buffer[min_x_coord + i + 1][y_zero_coord - 1] = c
@@ -751,9 +776,15 @@ class AFigure(object):
         return self.draw()
 
     def add_axes_labels(self, xlabel=None, ylabel=None, trans_result=[]):
-        line_len = {len(l) for l in trans_result}
-        if(ylabel != None):
+        line_len = len(trans_result[0])
+
+        if (ylabel is not None):
             trans_result.insert(0, ylabel)
+
+        if (xlabel is not None):
+            empty_line = " " * line_len
+            xlabel_line = empty_line[:-len(xlabel)] + xlabel
+            trans_result.append(xlabel_line)
 
         return trans_result
 
@@ -792,7 +823,10 @@ def plot(x,
          xlim=None,
          ylim=None,
          return_str=False,
-         xlabel=None):
+         xlabel=None,
+         ylabel=None,
+         xticks_to_int=False,
+         yticks_to_int=False):
 
     flags = {'shape': shape,
              'draw_axes': draw_axes,
@@ -801,7 +835,10 @@ def plot(x,
              'plot_slope': plot_slope,
              'margins': (x_margin, y_margin),
              'plot_labels': plot_labels,
-             'xlabel': xlabel}
+             'xlabel': xlabel,
+             'ylabel': ylabel,
+             'xticks_to_int': xticks_to_int,
+             'yticks_to_int': yticks_to_int}
 
     p = AFigure(**flags)
 
@@ -833,26 +870,30 @@ def stemify(x, y):
 
 
 def hist(
-        x,
-        bins=10,
-        normed=False,
-        weights=None,
-        density=None,
-        histtype='stem',
-        shape=(
-            50,
-            20),
-    draw_axes=True,
-    newline='\n',
-    marker='_.',
-    plot_slope=False,
-    x_margin=0.05,
-    y_margin=0.1,
-    plot_labels=True,
-    xlim=None,
-    ylim=None,
-    return_str=False,
-        xlabel=None):
+    x,
+    bins=10,
+    normed=False,
+    weights=None,
+    density=None,
+    histtype='stem',
+    shape=(
+        50,
+        20),
+        draw_axes=True,
+        newline='\n',
+        marker='_.',
+        plot_slope=False,
+        x_margin=0.05,
+        y_margin=0.1,
+        plot_labels=True,
+        xlim=None,
+        ylim=None,
+        return_str=False,
+        xlabel=None,
+        ylabel=None,
+        xticks_to_int=False,
+        yticks_to_int=False
+):
 
     from numpy import histogram
 
@@ -866,7 +907,7 @@ def hist(
     if histtype == 'step':
         step(_x, n.astype(float))
     elif histtype == 'stem':
-        stem(_x, n.astype(float))
+        stem(_x, n.astype(float), xlabel=xlabel, ylabel=ylabel)
     else:
         _y = n.astype(float)
         if (return_str):
@@ -883,7 +924,11 @@ def hist(
                 plot_labels=plot_labels,
                 xlim=xlim,
                 ylim=ylim,
-                return_str=return_str)
+                return_str=return_str,
+                xlabel=xlabel,
+                ylabel=ylabel,
+                xticks_to_int=False,
+                yticks_to_int=False)
         else:
             plot(
                 _x,
@@ -898,12 +943,18 @@ def hist(
                 plot_labels=plot_labels,
                 xlim=xlim,
                 ylim=ylim,
-                return_str=return_str)
+                return_str=return_str,
+                xlabel=xlabel,
+                ylabel=ylabel,
+                xticks_to_int=False,
+                yticks_to_int=False)
 
 
 def step(x, y, shape=(50, 20), draw_axes=True,
          newline='\n', marker='_.', plot_slope=True, x_margin=0.05,
-         y_margin=0.1, plot_labels=True, xlim=None, ylim=None):
+         y_margin=0.1, plot_labels=True, xlim=None, ylim=None,
+         xlabel=None, ylabel=None, xticks_to_int=False,
+         yticks_to_int=False):
 
     _x, _y = steppify(x, y)
     plot(
@@ -918,12 +969,17 @@ def step(x, y, shape=(50, 20), draw_axes=True,
         y_margin=y_margin,
         plot_labels=plot_labels,
         xlim=xlim,
-        ylim=ylim)
+        ylim=ylim,
+        xlabel=xlabel,
+        ylabel=ylabel, xticks_to_int=False,
+        yticks_to_int=False)
 
 
 def stem(x, y, shape=(50, 20), draw_axes=True,
          newline='\n', marker='_.', plot_slope=True, x_margin=0.05,
-         y_margin=0.1, plot_labels=True, xlim=None, ylim=None):
+         y_margin=0.1, plot_labels=True, xlim=None, ylim=None,
+         xlabel=None, ylabel=None, xticks_to_int=False,
+         yticks_to_int=False):
 
     _x, _y = stemify(x, y)
     plot(
@@ -938,7 +994,10 @@ def stem(x, y, shape=(50, 20), draw_axes=True,
         y_margin=y_margin,
         plot_labels=plot_labels,
         xlim=xlim,
-        ylim=ylim)
+        ylim=ylim,
+        xlabel=xlabel,
+        ylabel=ylabel, xticks_to_int=False,
+        yticks_to_int=False)
 
 
 def hist2d(

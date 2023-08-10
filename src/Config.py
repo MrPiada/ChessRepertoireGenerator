@@ -1,5 +1,5 @@
 import yaml
-from Utils import Color
+from utils import Color
 
 
 class Config:

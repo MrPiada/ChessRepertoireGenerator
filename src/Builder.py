@@ -7,8 +7,9 @@ import time
 import pandas as pd
 
 from chess.engine import Cp
-from Config import Config
-from Utils import Color
+from config import Config
+from utils import *
+from stats_plotter import *
 
 
 class RepertoireBuilder:
@@ -69,7 +70,7 @@ class RepertoireBuilder:
             game.accept(exporter)
 
         pass
-    
+
         return self.stats
 
     def __make_move(self, move, node, move_comment):
@@ -79,19 +80,20 @@ class RepertoireBuilder:
         elapsed_time = time.time() - self.start_time
         minutes, seconds = divmod(elapsed_time, 60)
         strTime = f"{minutes:.0f}m{seconds:.0f}s"
-        print(
-            "\n(",
-            strTime,
-            ") ",
-            "------- ",
-            child_node.ply(),
-            " ",
-            move,
-            " ",
-            move_comment,
-            "\n",
-            child_node.board()
-        )
+
+        board_header = f"\n({strTime}) ------- {child_node.ply()} {move} {move_comment}\n"
+        board = str(child_node.board())
+        clear_and_print(f"\n\n{board_header}\n{board}\n\n\n")
+
+        move_hist = ply_hist(self.stats, max_depth=self.config.MaxDepth)
+        white_perc_plot = plot_white_perc(
+            self.stats, max_depth=self.config.MaxDepth)
+        engine_eval_plot = plot_engine_eval(
+            self.stats, max_depth=self.config.MaxDepth)
+
+        plots = align_plots(
+            white_perc_plot, engine_eval_plot, move_hist)
+        print(plots)
 
         child_node.comment = move_comment
         eval = self.__get_cloud_eval(child_node.board().fen())
@@ -231,10 +233,10 @@ class RepertoireBuilder:
 
     def __GetCandidateMoves(self, node, tree):
         total_games = tree['white'] + tree['draws'] + tree['black']
-        
-        if(len(tree['moves']) == 0):
+
+        if (len(tree['moves']) == 0):
             print("CandidateMoves --> no tree moves at the beginning")
-            
+
         for move in tree['moves']:
             self.__compute_evaluations(node, move, total_games)
 
@@ -246,7 +248,7 @@ class RepertoireBuilder:
                 tree['moves']))
 
         eval_sorted_moves = []
-        if(len(evalutad_moves) == 0):
+        if (len(evalutad_moves) == 0):
             print("CandidateMoves --> no evaluated moves, use all of them")
             evalutad_moves = tree['moves']
             eval_sorted_moves = sorted(evalutad_moves, key=lambda x: x["eval"])
