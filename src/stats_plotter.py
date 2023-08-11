@@ -10,8 +10,9 @@ def ply_hist(stats, width=30, height=20, max_depth=10):
                     shape=(width, height),
                     plot_labels=True,
                     xlabel='ply',
-                    ylabel='depth freq',
-                    xticks_to_int=True)
+                    ylabel='#moves per ply',
+                    xticks_to_int=True,
+                    yticks_to_int=True)
     else:
         return ''
 
@@ -24,7 +25,7 @@ def plot_white_perc(stats, width=30, height=20, max_depth=10):
                 width,
                 height),
             xlabel='ply',
-            ylabel=('white %'),
+            ylabel=('avg. white %'),
             xticks_to_int=True)
         mid_vals = np.full(max_depth + 1, 50.0)
         xvals = range(max_depth + 1)
@@ -47,7 +48,7 @@ def plot_engine_eval(stats, width=30, height=20, max_depth=10):
                 width,
                 height),
             xlabel='ply',
-            ylabel=('engine eval'), xticks_to_int=True)
+            ylabel=('avg. engine eval'), xticks_to_int=True)
         return (
             p.plot(
                 engine_eval_data.index,

@@ -66,7 +66,7 @@ def format_move_infos(start_time, child_node, move, move_comment):
     move_number = (ply + 1) // 2
     is_white_to_move = child_node.board().turn
     str_move = str(move_number) + "."
-    if not is_white_to_move:
+    if is_white_to_move:
         str_move += " ... "
     str_move += move
 
