@@ -4,13 +4,13 @@ from ap3 import *
 
 def ply_hist(stats, width=30, height=20, max_depth=10):
     if (len(stats) > 0):
-        return hist(np.log10(stats['ply']),
+        return hist(stats['ply'],
                     histtype='None',
                     return_str=True,
                     shape=(width, height),
                     plot_labels=True,
                     xlabel='ply',
-                    ylabel='log10(depth freq)',
+                    ylabel='depth freq',
                     xticks_to_int=True)
     else:
         return ''

@@ -604,8 +604,6 @@ class AFigure(object):
 
         min_x_str, max_x_str, min_y_str, max_y_str = self.canvas.extent_str()
 
-        print("\n\n", min_x_str, max_x_str, min_y_str, max_y_str, "\n\n")
-
         if (self.canvas.x_str() is not None):
             for i, c in enumerate(min_x_str):
                 self.output_buffer[min_x_coord + i + 1][y_zero_coord - 1] = c
@@ -927,8 +925,8 @@ def hist(
                 return_str=return_str,
                 xlabel=xlabel,
                 ylabel=ylabel,
-                xticks_to_int=False,
-                yticks_to_int=False)
+                xticks_to_int=xticks_to_int,
+                yticks_to_int=yticks_to_int)
         else:
             plot(
                 _x,
@@ -946,8 +944,8 @@ def hist(
                 return_str=return_str,
                 xlabel=xlabel,
                 ylabel=ylabel,
-                xticks_to_int=False,
-                yticks_to_int=False)
+                xticks_to_int=xticks_to_int,
+                yticks_to_int=yticks_to_int)
 
 
 def step(x, y, shape=(50, 20), draw_axes=True,
