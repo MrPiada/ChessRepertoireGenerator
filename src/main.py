@@ -1,9 +1,12 @@
 import argparse
-from Builder import RepertoireBuilder
-from Config import Config
+from builder import RepertoireBuilder
+from config import Config
+
 
 def main():
-    parser = argparse.ArgumentParser(description="Generate repertoire using YAML configuration file.")
+
+    parser = argparse.ArgumentParser(
+        description="Generate repertoire using YAML configuration file.")
     parser.add_argument('config_file', help="Path to YAML configuration file")
     args = parser.parse_args()
     print(f"\nARGS: {args}")
@@ -12,7 +15,8 @@ def main():
     config = Config(filename)
 
     builder = RepertoireBuilder(config)
-    builder.GenerateReportoire()
+    stats = builder.GenerateReportoire()
+
 
 if __name__ == '__main__':
     main()
