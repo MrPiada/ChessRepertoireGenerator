@@ -7,25 +7,26 @@ class Color(Enum):
     BLACK = 1
 
 
-def align_plots(
-        white_perc_plot,
-        engine_eval_plot,
-        hist,
-        width=40):
-    wp = white_perc_plot.split('\n')
-    ep = engine_eval_plot.split('\n')
-    h = hist.split('\n')
+def align_printables(lists, width=40):
+    aligned_lines = []
 
-    lines = []
+    # Split each list into lines
+    split_lists = [lst.split('\n') for lst in lists]
 
-    for l1, l2, l3 in zip(wp, ep, h):
-        # Pad each line with spaces
-        l1 = l1.ljust(width)
-        l2 = l2.ljust(width)
-        l3 = l3.ljust(width)
-        lines.append(f"{l1}{l2}{l3}")
+    # Find the maximum number of lines in any list
+    max_lines = max(len(lst) for lst in split_lists)
 
-    return '\n'.join(lines)
+    for line_idx in range(max_lines):
+        aligned_line = ""
+        for lst in split_lists:
+            if line_idx < len(lst):
+                aligned_line += lst[line_idx].ljust(width)
+            else:
+                aligned_line += " " * width
+            aligned_line += " "  # Add a space between aligned columns
+        aligned_lines.append(aligned_line)
+
+    return '\n'.join(aligned_lines)
 
 
 def clear_and_print(snapshot):

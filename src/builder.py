@@ -77,23 +77,7 @@ class RepertoireBuilder:
         # eseguo la mossa richiesta
         child_node = node.add_variation(chess.Move.from_uci(move))
 
-        elapsed_time = time.time() - self.start_time
-        minutes, seconds = divmod(elapsed_time, 60)
-        strTime = f"{minutes:.0f}m{seconds:.0f}s"
-
-        board_header = f"\n({strTime}) ------- {child_node.ply()} {move} {move_comment}\n"
-        board = str(child_node.board())
-        clear_and_print(f"\n\n{board_header}\n{board}\n\n\n")
-
-        move_hist = ply_hist(self.stats, max_depth=self.config.MaxDepth)
-        white_perc_plot = plot_white_perc(
-            self.stats, max_depth=self.config.MaxDepth)
-        engine_eval_plot = plot_engine_eval(
-            self.stats, max_depth=self.config.MaxDepth)
-
-        plots = align_plots(
-            white_perc_plot, engine_eval_plot, move_hist)
-        print(plots)
+        self.__update_UI(child_node, move, move_comment)
 
         child_node.comment = move_comment
         eval = self.__get_cloud_eval(child_node.board().fen())
@@ -274,3 +258,26 @@ class RepertoireBuilder:
             evalutad_moves,
             bIsWhiteToMove=bIsWhiteToMove,
             bIsWhiteRepertoire=self.bIsWhiteRepertoire)
+
+    def __update_UI(self, child_node, move, move_comment):
+        elapsed_time = time.time() - self.start_time
+        minutes, seconds = divmod(elapsed_time, 60)
+        strTime = f"{minutes:.0f}m{seconds:.0f}s"
+
+        # TODO: formattare questa stringa per ottenere la tabella delle info
+        board_header = f"\n({strTime}) ------- {child_node.ply()} {move} {move_comment}\n"
+
+        # TODO: posizionare la board a sinistra e la tabella a destra della
+        # board
+        board = str(child_node.board())
+        clear_and_print(f"\n\n{board_header}\n{board}\n\n\n")
+
+        move_hist = ply_hist(self.stats, max_depth=self.config.MaxDepth)
+        white_perc_plot = plot_white_perc(
+            self.stats, max_depth=self.config.MaxDepth)
+        engine_eval_plot = plot_engine_eval(
+            self.stats, max_depth=self.config.MaxDepth)
+
+        plots = align_printables(
+            [white_perc_plot, engine_eval_plot, move_hist])
+        print(plots)

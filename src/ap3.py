@@ -604,8 +604,6 @@ class AFigure(object):
 
         min_x_str, max_x_str, min_y_str, max_y_str = self.canvas.extent_str()
 
-        print("\n\n", min_x_str, max_x_str, min_y_str, max_y_str, "\n\n")
-
         if (self.canvas.x_str() is not None):
             for i, c in enumerate(min_x_str):
                 self.output_buffer[min_x_coord + i + 1][y_zero_coord - 1] = c
