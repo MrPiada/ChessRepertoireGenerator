@@ -62,7 +62,7 @@ class RepertoireBuilder:
 
         # TODO: va poi deciso come iniziare un repertorio per il nero
         #       --> gli si fa creare un repertorio partendo dalle varie mosse del bianco ???
-        self.__make_move(self.config.StartingMove, game, "Starting move")
+        self.__make_move(self.config.StartingMove, game, "Starting move", '')
 
         # Salvataggio della partita in formato PGN
         with open(self.config.PgnName, "w") as f:
@@ -73,11 +73,11 @@ class RepertoireBuilder:
 
         return self.stats
 
-    def __make_move(self, move, node, move_comment):
+    def __make_move(self, move, node, move_comment, move_san):
         # eseguo la mossa richiesta
         child_node = node.add_variation(chess.Move.from_uci(move))
 
-        self.__update_UI(child_node, move, move_comment)
+        self.__update_UI(child_node, move_san, move_comment)
 
         child_node.comment = move_comment
         eval = self.__get_cloud_eval(child_node.board().fen())
@@ -118,7 +118,8 @@ class RepertoireBuilder:
             self.__make_move(
                 move['uci'],
                 child_node,
-                move['comment'])
+                move['comment'],
+                move['san'])
 
     def __get_cloud_eval(self, fen):
         self.ApiCloudEvalParams['fen'] = fen
@@ -260,17 +261,14 @@ class RepertoireBuilder:
             bIsWhiteRepertoire=self.bIsWhiteRepertoire)
 
     def __update_UI(self, child_node, move, move_comment):
-        elapsed_time = time.time() - self.start_time
-        minutes, seconds = divmod(elapsed_time, 60)
-        strTime = f"{minutes:.0f}m{seconds:.0f}s"
 
-        # TODO: formattare questa stringa per ottenere la tabella delle info
-        board_header = f"\n({strTime}) ------- {child_node.ply()} {move} {move_comment}\n"
+        board_info = format_move_infos(
+            self.start_time, child_node, move, move_comment)
 
-        # TODO: posizionare la board a sinistra e la tabella a destra della
-        # board
         board = str(child_node.board())
-        clear_and_print(f"\n\n{board_header}\n{board}\n\n\n")
+        board_and_info = align_printables([board, board_info])
+
+        clear_and_print(board_and_info)
 
         move_hist = ply_hist(self.stats, max_depth=self.config.MaxDepth)
         white_perc_plot = plot_white_perc(

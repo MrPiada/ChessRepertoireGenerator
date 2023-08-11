@@ -925,8 +925,8 @@ def hist(
                 return_str=return_str,
                 xlabel=xlabel,
                 ylabel=ylabel,
-                xticks_to_int=False,
-                yticks_to_int=False)
+                xticks_to_int=xticks_to_int,
+                yticks_to_int=yticks_to_int)
         else:
             plot(
                 _x,
@@ -944,8 +944,8 @@ def hist(
                 return_str=return_str,
                 xlabel=xlabel,
                 ylabel=ylabel,
-                xticks_to_int=False,
-                yticks_to_int=False)
+                xticks_to_int=xticks_to_int,
+                yticks_to_int=yticks_to_int)
 
 
 def step(x, y, shape=(50, 20), draw_axes=True,
