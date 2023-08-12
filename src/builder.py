@@ -51,14 +51,6 @@ class RepertoireBuilder:
                 'percGames',
                 'engineEval'])
 
-        # TODO: creare una lista self.stats = [],
-        #       la lista sarà riempita con un dizionario contenente
-        #       la mossa (in formato san), score del bianco/patta/nero, ply, valutazione motore
-        # TODO: sfruttare la lista stat per fare grafici in funzione del ply per vedere la qualità del repertorio
-        # TODO: usare plotly in modo che ogni punto possa avere il tooltip che spiega la mossa
-        # TODO: colorare di nero i punti delle mosse del nero e di bianco i
-        # punti delle mosse del
-
     def __graceful_exit(self, signum, frame):
         """Handler for Ctrl+C (SIGINT) signal."""
         global gracefull_exit
@@ -74,14 +66,10 @@ class RepertoireBuilder:
         game.headers["Event"] = self.config.Event
 
         try:
-            # TODO: va poi deciso come iniziare un repertorio per il nero
-            #       --> gli si fa creare un repertorio partendo dalle varie mosse del bianco ???
             self.__make_move(self.config.StartingMove,
                              game, "Starting move", '')
         except KeyboardInterrupt:
             self.__graceful_exit(signal.SIGINT, None)
-
-        print("\n\nPIPPO\n\n")
 
         # Salvataggio della partita in formato PGN
         with open(self.config.PgnName, "w") as f:
