@@ -1,6 +1,5 @@
 import os
 import time
-import re
 
 from enum import Enum
 from tabulate import tabulate
@@ -40,22 +39,7 @@ def clear_and_print(snapshot):
     print(snapshot)
 
 
-def split_move_comment(move_comment):
-    pattern = r'(\d+%)\s*\((\d+)\)(?: -- (-?\d+\.\d+))?(?: -- (\d+/\d+/\d+))?'
-    match = re.search(pattern, move_comment)
-
-    if match:
-        move_perc = match.group(1) if match.group(1) is not None else None
-        move_games = match.group(2) if match.group(2) is not None else None
-        engine_eval = match.group(3) if match.group(3) is not None else None
-        move_score = match.group(4) if match.group(4) is not None else None
-
-        return move_perc, move_games, engine_eval, move_score
-    else:
-        return None, None, None, None
-
-
-def format_move_infos(start_time, child_node, move, move_comment):
+def format_move_infos(start_time, child_node, move, full_move_info):
 
     elapsed_time = time.time() - start_time
     minutes, seconds = divmod(elapsed_time, 60)
@@ -69,8 +53,12 @@ def format_move_infos(start_time, child_node, move, move_comment):
         str_move += " ... "
     str_move += move
 
-    move_perc, move_games, engine_eval, move_score = split_move_comment(
-        move_comment)
+    move_perc, move_games, engine_eval, move_score = None, None, None, None
+    if full_move_info is not None:
+        move_perc = full_move_info['perc']
+        move_games = full_move_info['tot_games']
+        engine_eval = full_move_info['eval']
+        move_score = f"{full_move_info['white']}/{full_move_info['draws']}/{full_move_info['black']}"
 
     data = [
         ["Elapsed time", str_time],

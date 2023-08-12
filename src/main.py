@@ -1,5 +1,4 @@
 import argparse
-import signal
 from builder import RepertoireBuilder
 from config import Config
 
