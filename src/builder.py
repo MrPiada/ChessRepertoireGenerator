@@ -49,7 +49,7 @@ class RepertoireBuilder:
                 'percGames',
                 'engineEval'])
 
-    def __graceful_exit(self):
+    def __graceful_exit(self, *args):
         """Handler for Ctrl+C (SIGINT) signal."""
         global GRACEFULL_EXIT
         GRACEFULL_EXIT = True
@@ -67,7 +67,7 @@ class RepertoireBuilder:
             self.__make_move(self.config.StartingMove,
                              game, "Starting move")
         except KeyboardInterrupt:
-            self.__graceful_exit(signal.SIGINT, None)
+            self.__graceful_exit()
 
         # Salvataggio della partita in formato PGN
         with open(self.config.PgnName, "w") as f:
