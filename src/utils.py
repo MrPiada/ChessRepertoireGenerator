@@ -29,11 +29,10 @@ def align_printables(lists, width=40):
                 aligned_line += '\t' + " " * width
             aligned_line += " "  # Add a space between aligned columns
         aligned_lines.append(aligned_line)
-    
+
     aligned_lines.append('\n')
 
     return '\n'.join(aligned_lines)
-
 
 
 def clear_and_print(snapshot):

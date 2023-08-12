@@ -3,6 +3,7 @@ import chess.pgn
 import chess
 import json
 import sys
+import signal
 import time
 import pandas as pd
 
@@ -11,9 +12,14 @@ from config import Config
 from utils import *
 from stats_plotter import *
 
+gracefull_exit = False
+
 
 class RepertoireBuilder:
     def __init__(self, config):
+        # Register the signal handler for SIGINT (Ctrl+C)
+        signal.signal(signal.SIGINT, self.__graceful_exit)
+
         self.config = config
         self.bIsWhiteRepertoire = (self.config.Color == Color.WHITE)
         self.ApiDbUrl = "https://explorer.lichess.ovh/lichess"
@@ -45,13 +51,12 @@ class RepertoireBuilder:
                 'percGames',
                 'engineEval'])
 
-        # TODO: creare una lista self.stats = [],
-        #       la lista sarà riempita con un dizionario contenente
-        #       la mossa (in formato san), score del bianco/patta/nero, ply, valutazione motore
-        # TODO: sfruttare la lista stat per fare grafici in funzione del ply per vedere la qualità del repertorio
-        # TODO: usare plotly in modo che ogni punto possa avere il tooltip che spiega la mossa
-        # TODO: colorare di nero i punti delle mosse del nero e di bianco i
-        # punti delle mosse del
+    def __graceful_exit(self, signum, frame):
+        """Handler for Ctrl+C (SIGINT) signal."""
+        global gracefull_exit
+        gracefull_exit = True
+
+        print("\nGracefully exiting...")
 
     def GenerateReportoire(self):
         print("\n\t\tSTART\n")
@@ -60,20 +65,25 @@ class RepertoireBuilder:
         game = chess.pgn.Game()
         game.headers["Event"] = self.config.Event
 
-        # TODO: va poi deciso come iniziare un repertorio per il nero
-        #       --> gli si fa creare un repertorio partendo dalle varie mosse del bianco ???
-        self.__make_move(self.config.StartingMove, game, "Starting move", '')
+        try:
+            self.__make_move(self.config.StartingMove,
+                             game, "Starting move", '')
+        except KeyboardInterrupt:
+            self.__graceful_exit(signal.SIGINT, None)
 
         # Salvataggio della partita in formato PGN
         with open(self.config.PgnName, "w") as f:
             exporter = chess.pgn.FileExporter(f)
             game.accept(exporter)
 
-        pass
-
         return self.stats
 
     def __make_move(self, move, node, move_comment, move_san):
+        global gracefull_exit
+
+        if (gracefull_exit):
+            return
+
         # eseguo la mossa richiesta
         child_node = node.add_variation(chess.Move.from_uci(move))
 
