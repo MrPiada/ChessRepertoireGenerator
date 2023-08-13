@@ -54,11 +54,10 @@ def format_move_infos(start_time, child_node, move, full_move_info):
     str_move += move
 
     move_perc, move_games, engine_eval, move_score = None, None, None, None
-    if full_move_info is not None:
-        move_perc = full_move_info['perc']
-        move_games = full_move_info['tot_games']
-        engine_eval = full_move_info['eval']
-        move_score = f"{full_move_info['white']}/{full_move_info['draws']}/{full_move_info['black']}"
+    move_perc = full_move_info.get('perc')
+    move_games = full_move_info.get('tot_games')
+    engine_eval = full_move_info.get('eval')
+    move_score = f"{full_move_info.get('white')}/{full_move_info.get('draws')}/{full_move_info.get('black')}"
 
     data = [
         ["Elapsed time", str_time],
