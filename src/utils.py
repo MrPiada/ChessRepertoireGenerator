@@ -4,6 +4,26 @@ import time
 from enum import Enum
 from tabulate import tabulate
 
+ASCII_LOGO = '''
+
+     ,******
+     *******   CHESS
+      *****
+       ***@@@@@@@@@
+       *** @@@@@@@@    REPERTOIRE
+     .*****.@@@@@
+    ********@@@@@.,%%%%
+   *********@@@@@%%%%%%%%%%#   GENERATOR
+           @@@@@@%%%%%%
+         &@@@@@@@%%%%%%%%
+        /@@@@@@@@@%%%%%%%%%
+                  %%%%%%%%%
+                  %%%%%%%%
+                %%%%%%%%%%%%
+                #%%%%%%%%%%%
+
+'''
+
 
 class Color(Enum):
     WHITE = 0

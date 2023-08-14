@@ -56,7 +56,9 @@ class Config:
         fen_pattern = re.compile(
             r'^[rnbqkpRNBQKP1-8]+\/[rnbqkpRNBQKP1-8]+\/[rnbqkpRNBQKP1-8]+\/[rnbqkpRNBQKP1-8]+\/[rnbqkpRNBQKP1-8]+\/[rnbqkpRNBQKP1-8]+\/[rnbqkpRNBQKP1-8]+\/[rnbqkpRNBQKP1-8]+\s[wb]\s[KQkq-]+\s[a-h36-]\s\d+\s\d+$')
 
-        if isinstance(starting_position, str) and bool(fen_pattern.match(starting_position)):
+        if isinstance(
+                starting_position, str) and bool(
+                fen_pattern.match(starting_position)):
             starting_position_type = StartPositionType.FEN
         elif isinstance(starting_position, str) and starting_position.lower().endswith('.pgn'):
             starting_position_type = StartPositionType.PGN
