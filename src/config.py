@@ -1,5 +1,15 @@
 import yaml
+import re
+
+from enum import Enum
 from utils import Color
+
+
+class StartPositionType(Enum):
+    STARTING_MOVE = 0
+    MOVE_LIST = 1
+    FEN = 2
+    PGN = 3
 
 
 class Config:
@@ -24,7 +34,7 @@ class Config:
 
         # Generator info
         self.Color = Color[((str)(config_data.get('Color', "White"))).upper()]
-        self.StartingMove = config_data.get('WhiteStartingMove', "e2e4")
+
         self.MaxDepth = config_data.get('MaxDepth', 10)
 
         # Move filter info
@@ -36,3 +46,23 @@ class Config:
         # considero mosse fino al punto in cui ho coperto almeno l'80% delle
         # mosse giocate
         self.FreqThreshold = config_data.get('FreqThreshold', 80)
+
+        self.StartingPosition, self.StartingPositionType = self.__parse_starting_position(
+            config_data.get('StartingPosition'))
+
+    def __parse_starting_position(self, starting_position):
+        starting_position_type = None
+
+        fen_pattern = re.compile(
+            r'^[rnbqkpRNBQKP1-8]+\/[rnbqkpRNBQKP1-8]+\/[rnbqkpRNBQKP1-8]+\/[rnbqkpRNBQKP1-8]+\/[rnbqkpRNBQKP1-8]+\/[rnbqkpRNBQKP1-8]+\/[rnbqkpRNBQKP1-8]+\/[rnbqkpRNBQKP1-8]+\s[wb]\s[KQkq-]+\s[a-h36-]\s\d+\s\d+$')
+
+        if isinstance(starting_position, str) and bool(fen_pattern.match(starting_position)):
+            starting_position_type = StartPositionType.FEN
+        elif isinstance(starting_position, str) and starting_position.lower().endswith('.pgn'):
+            starting_position_type = StartPositionType.PGN
+        elif isinstance(starting_position, str):
+            starting_position_type = StartPositionType.STARTING_MOVE
+        elif isinstance(starting_position, list):
+            starting_position_type = StartPositionType.MOVE_LIST
+
+        return starting_position, starting_position_type
