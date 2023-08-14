@@ -8,7 +8,7 @@ import pandas as pd
 
 from config import StartPositionType
 from chess.engine import Cp
-from utils import Color, align_printables, clear_and_print, format_move_infos, is_uci_move
+from utils import Color, align_printables, clear_and_print, format_move_infos, is_uci_move, ASCII_LOGO
 from stats_plotter import ply_hist, plot_white_perc, plot_engine_eval
 
 GRACEFULL_EXIT = False
