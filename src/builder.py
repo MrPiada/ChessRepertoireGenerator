@@ -6,8 +6,9 @@ import chess.pgn
 import chess
 import pandas as pd
 
+from config import StartPositionType
 from chess.engine import Cp
-from utils import Color, align_printables, clear_and_print, format_move_infos
+from utils import Color, align_printables, clear_and_print, format_move_infos, is_uci_move
 from stats_plotter import ply_hist, plot_white_perc, plot_engine_eval
 
 GRACEFULL_EXIT = False
@@ -35,6 +36,9 @@ class RepertoireBuilder:
             "fen": None
         }
 
+        self.starting_position = self.config.StartingPosition
+        self.starting_position_type = self.config.StartingPositionType
+
         self.start_time = 0
 
         self.stats = pd.DataFrame(
@@ -49,7 +53,7 @@ class RepertoireBuilder:
                 'percGames',
                 'engineEval'])
 
-    def __graceful_exit(self):
+    def __graceful_exit(self, *args):
         """Handler for Ctrl+C (SIGINT) signal."""
         global GRACEFULL_EXIT
         GRACEFULL_EXIT = True
@@ -60,14 +64,17 @@ class RepertoireBuilder:
         print("\n\t\tSTART\n")
         self.start_time = time.time()
 
-        game = chess.pgn.Game()
-        game.headers["Event"] = self.config.Event
+        game = self.__setup_initial_position(
+            self.starting_position, self.starting_position_type)
+        if game is not None:
+            game.headers["Event"] = self.config.Event
+        else:
+            return
 
         try:
-            self.__make_move(self.config.StartingMove,
-                             game, "Starting move")
+            self.__make_move("", game, "Starting move", starting_move=True)
         except KeyboardInterrupt:
-            self.__graceful_exit(signal.SIGINT, None)
+            self.__graceful_exit()
 
         # Salvataggio della partita in formato PGN
         with open(self.config.PgnName, "w") as f:
@@ -76,14 +83,66 @@ class RepertoireBuilder:
 
         return self.stats
 
-    def __make_move(self, move, node, move_san, full_move_info=None):
+    def __setup_initial_position(
+            self,
+            starting_position,
+            starting_position_type):
+        game = chess.pgn.Game()
+
+        print(
+            f"\n\nposition: {starting_position}\t type: {starting_position_type}")
+
+        try:
+            if starting_position_type == StartPositionType.STARTING_MOVE:
+                if is_uci_move(starting_position):
+                    game = game.add_variation(
+                        chess.Move.from_uci(starting_position))
+                else:
+                    game = game.add_variation(
+                        game.board().push_san(starting_position))
+
+            elif starting_position_type == StartPositionType.MOVE_LIST:
+                for move in starting_position:
+                    if is_uci_move(move):
+                        game = game.add_variation(
+                            chess.Move.from_uci(move))
+                    else:
+                        game = game.add_variation(game.board().push_san(move))
+
+            elif starting_position_type == StartPositionType.FEN:
+                game.setup(starting_position)
+
+            elif starting_position_type == StartPositionType.PGN:
+                with open(starting_position, 'r') as pgn_file:
+                    pgn_game = chess.pgn.read_game(pgn_file)
+                    board = pgn_game.board()
+                    for move in pgn_game.mainline_moves():
+                        board.push(move)
+                    game.setup(board.fen())
+
+        except Exception as e:
+            print("An error occurred while initializing the game:", e)
+            game = None
+
+        return game
+
+    def __make_move(
+            self,
+            move,
+            node,
+            move_san,
+            full_move_info=None,
+            starting_move=False):
         global GRACEFULL_EXIT
 
         if GRACEFULL_EXIT:
             return
 
-        # eseguo la mossa richiesta
-        child_node = node.add_variation(chess.Move.from_uci(move))
+        if starting_move:
+            child_node = node
+        else:
+            # eseguo la mossa richiesta
+            child_node = node.add_variation(chess.Move.from_uci(move))
 
         self.__update_UI(child_node, move_san, full_move_info)
 
