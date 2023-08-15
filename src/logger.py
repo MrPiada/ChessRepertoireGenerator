@@ -64,7 +64,6 @@ class Logger:
 
 
     def debug(self, message):
-        print(message)
         self.logger.debug(message)
 
 

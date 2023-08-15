@@ -30,7 +30,6 @@ class Config:
 
         # Pgn info
         self.PgnName = config_data.get('PgnName', "Repertoire.pgn")
-        self.Event = config_data.get('Event', "ChessRepertoireGenerato")
 
         # Generator info
         self.Color = Color[((str)(config_data.get('Color', "White"))).upper()]

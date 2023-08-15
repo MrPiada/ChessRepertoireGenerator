@@ -70,10 +70,6 @@ class RepertoireBuilder:
 
         game = self.__setup_initial_position(
             self.starting_position, self.starting_position_type)
-        if game is not None:
-            game.headers["Event"] = self.config.Event
-        else:
-            return
 
         try:
             self.__make_move("", game, "Starting move", starting_move=True)
@@ -203,6 +199,7 @@ class RepertoireBuilder:
         response = requests.get(
             self.api_cloud_eval_url,
             params=self.api_cloud_eval_params)
+        
         tree = json.loads(response.content.decode())
         # Se esiste la valutazione in cloud della mossa
         if 'pvs' in tree:
