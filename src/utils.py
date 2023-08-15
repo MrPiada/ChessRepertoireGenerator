@@ -6,27 +6,6 @@ from tabulate import tabulate
 from colorama import Back, init, Style
 
 
-ASCII_LOGO = '''
-
-     ,******
-     *******   CHESS
-      *****
-       ***@@@@@@@@@
-       *** @@@@@@@@    REPERTOIRE
-     .*****.@@@@@
-    ********@@@@@.,%%%%
-   *********@@@@@%%%%%%%%%%#   GENERATOR
-           @@@@@@%%%%%%
-         &@@@@@@@%%%%%%%%
-        /@@@@@@@@@%%%%%%%%%
-                  %%%%%%%%%
-                  %%%%%%%%
-                %%%%%%%%%%%%
-                #%%%%%%%%%%%
-
-'''
-
-
 class Color(Enum):
     WHITE = 0
     BLACK = 1
@@ -44,25 +23,25 @@ def get_stylish_chessboard(encoded_position_str):
         return mapping.get(letter, letter)
 
     chessboard = [[' ' for _ in range(8)] for _ in range(8)]
-     
+
     encoded_lines = encoded_position_str.strip().split('\n')
     for i, line in enumerate(encoded_lines):
         pieces = line.split()
         for j, piece in enumerate(pieces):
             chessboard[i][j] = map_letters_to_chess_pieces(piece)
-    
+
     stylish_chessboard = ""
     for row_index, row in enumerate(chessboard):
         for col_index, element in enumerate(row):
-            
+
             if (row_index + col_index) % 2 == 0:
                 color = Back.LIGHTWHITE_EX
             else:
                 color = Back.LIGHTBLACK_EX
-            
+
             stylish_chessboard += f"{color}{element}{Style.RESET_ALL}"
         stylish_chessboard += "\n"
-        
+
     return stylish_chessboard
 
 

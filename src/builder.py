@@ -6,10 +6,11 @@ import chess.pgn
 import chess
 import pandas as pd
 
-from config import StartPositionType
 from chess.engine import Cp
-from utils import ASCII_LOGO, Color, align_printables, clear_and_print, format_move_infos, is_uci_move, get_stylish_chessboard
+from config import StartPositionType
+from utils import Color, align_printables, clear_and_print, format_move_infos, is_uci_move, get_stylish_chessboard
 from stats_plotter import ply_hist, plot_white_perc, plot_engine_eval
+from logger import Logger
 
 GRACEFULL_EXIT = False
 
@@ -40,6 +41,9 @@ class RepertoireBuilder:
         self.starting_position_type = self.config.StartingPositionType
 
         self.start_time = 0
+        
+        logfile_name = self.config.PgnName
+        self.logger = Logger(logfile_name)
 
         self.stats = pd.DataFrame(
             columns=[
@@ -58,10 +62,10 @@ class RepertoireBuilder:
         global GRACEFULL_EXIT
         GRACEFULL_EXIT = True
 
-        print("\nGracefully exiting...")
+        self.logger.warning("Gracefully exiting...")
 
     def GenerateReportoire(self):
-        print("\n\t\tSTART\n")
+        self.logger.info("START GenerateReportoire()")
         self.start_time = time.time()
 
         game = self.__setup_initial_position(
@@ -76,8 +80,9 @@ class RepertoireBuilder:
         except KeyboardInterrupt:
             self.__graceful_exit()
 
+        output_repertoire_file = self.config.PgnName + '.pgn'
         # Salvataggio della partita in formato PGN
-        with open(self.config.PgnName, "w") as f:
+        with open(output_repertoire_file, "w") as f:
             exporter = chess.pgn.FileExporter(f)
             game.accept(exporter)
 
@@ -89,8 +94,8 @@ class RepertoireBuilder:
             starting_position_type):
         game = chess.pgn.Game()
 
-        print(
-            f"\n\nposition: {starting_position}\t type: {starting_position_type}")
+        self.logger.info(
+            f"position: {starting_position}\t type: {starting_position_type}")
 
         try:
             if starting_position_type == StartPositionType.STARTING_MOVE:
@@ -121,7 +126,7 @@ class RepertoireBuilder:
                     game.setup(board.fen())
 
         except Exception as e:
-            print("An error occurred while initializing the game:", e)
+            self.logger.error("An error occurred while initializing the game:", e)
             game = None
 
         return game
@@ -158,7 +163,7 @@ class RepertoireBuilder:
 
         # interrompo la ricerca se raggiungo la profondità massima
         if child_node.ply() > self.config.MaxDepth:
-            print("----- MAX DEPTH")
+            self.logger.info("----- MAX DEPTH")
             return
 
         # ottengo il codice fen della posizione
@@ -171,7 +176,8 @@ class RepertoireBuilder:
         tree = json.loads(response.content.decode())
 
         candidate_moves = self.__get_candidate_moves(child_node, tree)
-        print("#CandidateMoves: ", len(candidate_moves))
+        self.logger.info(f"#CandidateMoves: {len(candidate_moves)}")
+        self.logger.debug(candidate_moves)
         for m in candidate_moves:
 
             self.stats.loc[len(self.stats)] = [
@@ -294,7 +300,7 @@ class RepertoireBuilder:
         total_games = tree['white'] + tree['draws'] + tree['black']
 
         if len(tree['moves']) == 0:
-            print("CandidateMoves --> no tree moves at the beginning")
+            self.logger.info("CandidateMoves --> no tree moves at the beginning")
 
         for move in tree['moves']:
             self.__compute_evaluations(node, move, total_games)
@@ -308,7 +314,7 @@ class RepertoireBuilder:
 
         eval_sorted_moves = []
         if len(evalutad_moves) == 0:
-            print("CandidateMoves --> no evaluated moves, use all of them")
+            self.logger.info("CandidateMoves --> no evaluated moves, use all of them")
             evalutad_moves = tree['moves']
             eval_sorted_moves = sorted(evalutad_moves, key=lambda x: x["eval"])
         else:

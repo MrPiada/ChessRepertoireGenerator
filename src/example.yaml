@@ -5,7 +5,7 @@ speeds:
 ratings:
   - 2000
   - 2200
-PgnName: RepertoireExample.pgn
+PgnName: RepertoireExample
 Event: ChessRepertoireGenerator
 Color: Black
 #StartingPosition: Nf3 
