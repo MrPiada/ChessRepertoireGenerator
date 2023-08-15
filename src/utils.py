@@ -3,6 +3,8 @@ import time
 
 from enum import Enum
 from tabulate import tabulate
+from colorama import Back, init, Style
+
 
 ASCII_LOGO = '''
 
@@ -28,6 +30,40 @@ ASCII_LOGO = '''
 class Color(Enum):
     WHITE = 0
     BLACK = 1
+
+
+def get_stylish_chessboard(encoded_position_str):
+    init(autoreset=True)
+
+    def map_letters_to_chess_pieces(letter):
+        mapping = {
+            'r': '♜', 'n': '♞', 'b': '♝', 'q': '♛', 'k': '♚', 'p': '♟',
+            'R': '♖', 'N': '♘', 'B': '♗', 'Q': '♕', 'K': '♔', 'P': '♙',
+            '.': ' ',
+        }
+        return mapping.get(letter, letter)
+
+    chessboard = [[' ' for _ in range(8)] for _ in range(8)]
+     
+    encoded_lines = encoded_position_str.strip().split('\n')
+    for i, line in enumerate(encoded_lines):
+        pieces = line.split()
+        for j, piece in enumerate(pieces):
+            chessboard[i][j] = map_letters_to_chess_pieces(piece)
+    
+    stylish_chessboard = ""
+    for row_index, row in enumerate(chessboard):
+        for col_index, element in enumerate(row):
+            
+            if (row_index + col_index) % 2 == 0:
+                color = Back.LIGHTWHITE_EX
+            else:
+                color = Back.LIGHTBLACK_EX
+            
+            stylish_chessboard += f"{color}{element}{Style.RESET_ALL}"
+        stylish_chessboard += "\n"
+        
+    return stylish_chessboard
 
 
 def align_printables(lists, width=40):
@@ -75,7 +111,7 @@ def format_move_infos(start_time, child_node, move, full_move_info):
 
     move_perc, move_games, engine_eval, move_score = None, None, None, None
     if full_move_info is not None:
-        move_perc = full_move_info.get('perc')
+        move_perc = str(full_move_info.get('perc')) + "%"
         move_games = full_move_info.get('tot_games')
         engine_eval = full_move_info.get('eval')
         move_score = f"{full_move_info.get('white')}/{full_move_info.get('draws')}/{full_move_info.get('black')}"
