@@ -122,7 +122,7 @@ class RepertoireBuilder:
                     game.setup(board.fen())
 
         except Exception as e:
-            self.logger.error("An error occurred while initializing the game:", e)
+            self.logger.error(f"An error occurred while initializing the game: {e}")
             game = None
 
         return game
