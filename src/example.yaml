@@ -7,14 +7,14 @@ ratings:
   - 2200
 PgnName: RepertoireExample.pgn
 Event: ChessRepertoireGenerator
-Color: White
+Color: Black
 #StartingPosition: Nf3 
 #StartingPosition: e2e4
 #StartingPosition: [Nc3, d5, Nf3, h5]
 #StartingPosition: r1bqkb1r/p2n1ppp/2p1pn2/1p6/3P4/2NBPN2/PP3PPP/R1BQK2R b KQkq - 1 8
 StartingPosition: Meran.pgn
-MaxDepth: 20
+MaxDepth: 28
 EngineLines: 3
 EngineThreshold: 0.8
 
-FreqThreshold: 85
+FreqThreshold: 50

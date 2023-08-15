@@ -8,7 +8,7 @@ import pandas as pd
 
 from config import StartPositionType
 from chess.engine import Cp
-from utils import Color, align_printables, clear_and_print, format_move_infos, is_uci_move, ASCII_LOGO
+from utils import ASCII_LOGO, Color, align_printables, clear_and_print, format_move_infos, is_uci_move, get_stylish_chessboard
 from stats_plotter import ply_hist, plot_white_perc, plot_engine_eval
 
 GRACEFULL_EXIT = False
@@ -340,6 +340,7 @@ class RepertoireBuilder:
             self.start_time, child_node, move, full_move_info)
 
         board = str(child_node.board())
+        board = get_stylish_chessboard(board)
         board_and_info = align_printables([board, board_info])
 
         clear_and_print(board_and_info)
