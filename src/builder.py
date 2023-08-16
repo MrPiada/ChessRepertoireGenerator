@@ -68,11 +68,11 @@ class RepertoireBuilder:
         self.logger.info("START GenerateReportoire()")
         self.start_time = time.time()
 
-        game = self.__setup_initial_position(
+        game, child_node = self.__setup_initial_position(
             self.starting_position, self.starting_position_type)
 
         try:
-            self.__make_move("", game, "Starting move", starting_move=True)
+            self.__make_move("", child_node, "Starting move", starting_move=True)
         except KeyboardInterrupt:
             self.__graceful_exit()
 
@@ -96,19 +96,25 @@ class RepertoireBuilder:
         try:
             if starting_position_type == StartPositionType.STARTING_MOVE:
                 if is_uci_move(starting_position):
-                    game = game.add_variation(
+                    child_node = game.add_variation(
                         chess.Move.from_uci(starting_position))
                 else:
-                    game = game.add_variation(
-                        game.board().push_san(starting_position))
+                    # Create a chess board
+                    board = chess.Board()
+                    move = board.parse_san(starting_position)
+
+                    # Convert the move to UCI format
+                    uci_move = move.uci()
+                    child_node = game.add_variation(
+                        chess.Move.from_uci(uci_move))
 
             elif starting_position_type == StartPositionType.MOVE_LIST:
                 for move in starting_position:
                     if is_uci_move(move):
-                        game = game.add_variation(
+                        child_node = game.add_variation(
                             chess.Move.from_uci(move))
                     else:
-                        game = game.add_variation(game.board().push_san(move))
+                        child_node = game.add_variation(game.board().push_san(move))
 
             elif starting_position_type == StartPositionType.FEN:
                 game.setup(starting_position)
@@ -125,7 +131,7 @@ class RepertoireBuilder:
             self.logger.error(f"An error occurred while initializing the game: {e}")
             game = None
 
-        return game
+        return game, child_node
 
     def __make_move(
             self,
