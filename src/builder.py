@@ -41,7 +41,7 @@ class RepertoireBuilder:
         self.starting_position_type = self.config.StartingPositionType
 
         self.start_time = 0
-        
+
         logfile_name = self.config.PgnName
         self.logger = Logger(logfile_name)
 
@@ -72,7 +72,11 @@ class RepertoireBuilder:
             self.starting_position, self.starting_position_type)
 
         try:
-            self.__make_move("", child_node, "Starting move", starting_move=True)
+            self.__make_move(
+                "",
+                child_node,
+                "Starting move",
+                starting_move=True)
         except KeyboardInterrupt:
             self.__graceful_exit()
 
@@ -99,14 +103,8 @@ class RepertoireBuilder:
                     child_node = game.add_variation(
                         chess.Move.from_uci(starting_position))
                 else:
-                    # Create a chess board
-                    board = chess.Board()
-                    move = board.parse_san(starting_position)
-
-                    # Convert the move to UCI format
-                    uci_move = move.uci()
                     child_node = game.add_variation(
-                        chess.Move.from_uci(uci_move))
+                        game.board().push_san(starting_position))
 
             elif starting_position_type == StartPositionType.MOVE_LIST:
                 for move in starting_position:
@@ -114,7 +112,8 @@ class RepertoireBuilder:
                         child_node = game.add_variation(
                             chess.Move.from_uci(move))
                     else:
-                        child_node = game.add_variation(game.board().push_san(move))
+                        child_node = game.add_variation(
+                            game.board().push_san(move))
 
             elif starting_position_type == StartPositionType.FEN:
                 game.setup(starting_position)
@@ -128,7 +127,8 @@ class RepertoireBuilder:
                     game.setup(board.fen())
 
         except Exception as e:
-            self.logger.error(f"An error occurred while initializing the game: {e}")
+            self.logger.error(
+                f"An error occurred while initializing the game: {e}")
             game = None
 
         return game, child_node
@@ -205,7 +205,7 @@ class RepertoireBuilder:
         response = requests.get(
             self.api_cloud_eval_url,
             params=self.api_cloud_eval_params)
-        
+
         tree = json.loads(response.content.decode())
         # Se esiste la valutazione in cloud della mossa
         if 'pvs' in tree:
@@ -303,7 +303,8 @@ class RepertoireBuilder:
         total_games = tree['white'] + tree['draws'] + tree['black']
 
         if len(tree['moves']) == 0:
-            self.logger.info("CandidateMoves --> no tree moves at the beginning")
+            self.logger.info(
+                "CandidateMoves --> no tree moves at the beginning")
 
         for move in tree['moves']:
             self.__compute_evaluations(node, move, total_games)
@@ -317,7 +318,8 @@ class RepertoireBuilder:
 
         eval_sorted_moves = []
         if len(evalutad_moves) == 0:
-            self.logger.info("CandidateMoves --> no evaluated moves, use all of them")
+            self.logger.info(
+                "CandidateMoves --> no evaluated moves, use all of them")
             evalutad_moves = tree['moves']
             eval_sorted_moves = sorted(evalutad_moves, key=lambda x: x["eval"])
         else:
