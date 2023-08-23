@@ -95,6 +95,7 @@ class RepertoireBuilder:
             starting_position,
             starting_position_type):
         game = chess.pgn.Game()
+        child_node = None
 
         self.logger.info(
             f"position: {starting_position}\t type: {starting_position_type}")
@@ -132,6 +133,9 @@ class RepertoireBuilder:
             self.logger.error(
                 f"An error occurred while initializing the game: {e}")
             game = None
+            
+        if child_node == None:
+            return game, game
 
         return game, child_node
 

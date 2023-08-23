@@ -5,15 +5,15 @@ speeds:
 ratings:
   - 2000
   - 2200
-PgnName: RepertoireExample
+PgnName: CaroKann_forBlack
 Color: Black
-StartingPosition: Na3
+#StartingPosition: Na3
 #StartingPosition: e2e4
-#StartingPosition: [Nc3, d5, Nf3, h5]
-#StartingPosition: r1bqkb1r/p2n1ppp/2p1pn2/1p6/3P4/2NBPN2/PP3PPP/R1BQK2R b KQkq - 1 8
+#StartingPosition: [e4, c6]
+StartingPosition: rnbqkbnr/pp1ppppp/2p5/8/4P3/8/PPPP1PPP/RNBQKBNR w KQkq - 0 2
 #StartingPosition: Meran.pgn
-MaxDepth: 4
+MaxDepth: 12
 EngineLines: 3
 EngineThreshold: 0.8
 
-FreqThreshold: 50
+FreqThreshold: 70
