@@ -16,7 +16,7 @@ GRACEFULL_EXIT = False
 
 
 class RepertoireBuilder:
-    def __init__(self, config):
+    def __init__(self, config, options):
         # Register the signal handler for SIGINT (Ctrl+C)
         signal.signal(signal.SIGINT, self.__graceful_exit)
 
@@ -44,6 +44,10 @@ class RepertoireBuilder:
 
         logfile_name = self.config.PgnName
         self.logger = Logger(logfile_name)
+        
+        self.options = options
+
+        self.session = requests.Session()
 
         self.stats = pd.DataFrame(
             columns=[
@@ -68,13 +72,13 @@ class RepertoireBuilder:
         self.logger.info("START GenerateReportoire()")
         self.start_time = time.time()
 
-        game, child_node = self.__setup_initial_position(
+        game, node = self.__setup_initial_position(
             self.starting_position, self.starting_position_type)
 
         try:
             self.__make_move(
                 "",
-                child_node,
+                node,
                 "Starting move",
                 starting_move=True)
         except KeyboardInterrupt:
@@ -93,6 +97,7 @@ class RepertoireBuilder:
             starting_position,
             starting_position_type):
         game = chess.pgn.Game()
+        node = game
 
         self.logger.info(
             f"position: {starting_position}\t type: {starting_position_type}")
@@ -100,23 +105,25 @@ class RepertoireBuilder:
         try:
             if starting_position_type == StartPositionType.STARTING_MOVE:
                 if is_uci_move(starting_position):
-                    child_node = game.add_variation(
+                    node = node.add_variation(
                         chess.Move.from_uci(starting_position))
                 else:
-                    child_node = game.add_variation(
-                        game.board().push_san(starting_position))
+                    node = node.add_variation(
+                        node.board().push_san(starting_position))
 
             elif starting_position_type == StartPositionType.MOVE_LIST:
                 for move in starting_position:
+                    self.logger.debug(f"node: {node}\n move: {move}")
+
                     if is_uci_move(move):
-                        child_node = game.add_variation(
+                        node = node.add_variation(
                             chess.Move.from_uci(move))
                     else:
-                        child_node = game.add_variation(
-                            game.board().push_san(move))
+                        node = node.add_variation(
+                            node.board().push_san(move))
 
             elif starting_position_type == StartPositionType.FEN:
-                game.setup(starting_position)
+                node.setup(starting_position)
 
             elif starting_position_type == StartPositionType.PGN:
                 with open(starting_position, 'r') as pgn_file:
@@ -124,14 +131,14 @@ class RepertoireBuilder:
                     board = pgn_game.board()
                     for move in pgn_game.mainline_moves():
                         board.push(move)
-                    game.setup(board.fen())
+                    node.setup(board.fen())
 
         except Exception as e:
             self.logger.error(
                 f"An error occurred while initializing the game: {e}")
             game = None
 
-        return game, child_node
+        return game, node
 
     def __make_move(
             self,
@@ -151,6 +158,8 @@ class RepertoireBuilder:
             # eseguo la mossa richiesta
             child_node = node.add_variation(chess.Move.from_uci(move))
 
+        self.logger.info(
+            f"__make_move(move:{move}, node:{node}, move_san:{move_san}, full_move_info:{full_move_info}, starting_move:{starting_move})")
         self.__update_UI(child_node, move_san, full_move_info)
 
         # TODO: implement smart move comments
@@ -172,7 +181,7 @@ class RepertoireBuilder:
         self.api_db_params["fen"] = child_node.board().fen()
 
         # eseguo la chiamata all'API lichess
-        response = requests.get(self.api_db_url, params=self.api_db_params)
+        response = self.session.get(self.api_db_url, params=self.api_db_params)
 
         # parsing della response
         tree = json.loads(response.content.decode())
@@ -202,7 +211,7 @@ class RepertoireBuilder:
 
     def __get_cloud_eval(self, fen):
         self.api_cloud_eval_params['fen'] = fen
-        response = requests.get(
+        response = self.session.get(
             self.api_cloud_eval_url,
             params=self.api_cloud_eval_params)
 
@@ -356,12 +365,13 @@ class RepertoireBuilder:
 
         clear_and_print(board_and_info)
 
-        move_hist = ply_hist(self.stats, max_depth=self.config.MaxDepth)
-        white_perc_plot = plot_white_perc(
-            self.stats, max_depth=self.config.MaxDepth)
-        engine_eval_plot = plot_engine_eval(
-            self.stats, max_depth=self.config.MaxDepth)
+        if self.options['plot']:
+            move_hist = ply_hist(self.stats, max_depth=self.config.MaxDepth)
+            white_perc_plot = plot_white_perc(
+                self.stats, max_depth=self.config.MaxDepth)
+            engine_eval_plot = plot_engine_eval(
+                self.stats, max_depth=self.config.MaxDepth)
 
-        plots = align_printables(
-            [white_perc_plot, engine_eval_plot, move_hist])
-        print(plots)
+            plots = align_printables(
+                [white_perc_plot, engine_eval_plot, move_hist])
+            print(plots)
