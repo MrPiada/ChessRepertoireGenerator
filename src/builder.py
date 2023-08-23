@@ -44,6 +44,8 @@ class RepertoireBuilder:
 
         logfile_name = self.config.PgnName
         self.logger = Logger(logfile_name)
+        
+        self.session = requests.Session()
 
         self.stats = pd.DataFrame(
             columns=[
@@ -57,7 +59,7 @@ class RepertoireBuilder:
                 'percGames',
                 'engineEval'])
 
-    def __graceful_exit(self, *args):
+    def __graceful_exit(self):
         """Handler for Ctrl+C (SIGINT) signal."""
         global GRACEFULL_EXIT
         GRACEFULL_EXIT = True
@@ -172,7 +174,7 @@ class RepertoireBuilder:
         self.api_db_params["fen"] = child_node.board().fen()
 
         # eseguo la chiamata all'API lichess
-        response = requests.get(self.api_db_url, params=self.api_db_params)
+        response = self.session.get(self.api_db_url, params=self.api_db_params)
 
         # parsing della response
         tree = json.loads(response.content.decode())
@@ -202,7 +204,7 @@ class RepertoireBuilder:
 
     def __get_cloud_eval(self, fen):
         self.api_cloud_eval_params['fen'] = fen
-        response = requests.get(
+        response = self.session.get(
             self.api_cloud_eval_url,
             params=self.api_cloud_eval_params)
 
