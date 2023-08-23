@@ -3,4 +3,4 @@ from pstats import SortKey
 
 p = pstats.Stats("builder.prof")
 
-p.sort_stats("tottime").print_stats(30);
+p.sort_stats("tottime").print_stats(30)

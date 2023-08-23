@@ -9,13 +9,14 @@ def main():
     parser = argparse.ArgumentParser(
         description="Generate repertoire using YAML configuration file.")
     parser.add_argument('config_file', help="Path to YAML configuration file")
+    parser.add_argument('--plot', action='store_true', default=False,
+                    help="Print live repertoire stat plots")
     args = parser.parse_args()
-    print(f"\nARGS: {args}")
-    filename = args.config_file
 
-    config = Config(filename)
-
-    builder = RepertoireBuilder(config)
+    config = Config(args.config_file)
+    options = {'plot': args.plot}
+    
+    builder = RepertoireBuilder(config, options)
     stats = builder.GenerateReportoire()
 
 
