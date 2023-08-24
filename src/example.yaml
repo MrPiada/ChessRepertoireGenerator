@@ -12,7 +12,7 @@ Color: Black
 StartingPosition: [e4, c6]
 #StartingPosition: rnbqkbnr/pp1ppppp/2p5/8/4P3/8/PPPP1PPP/RNBQKBNR w KQkq - 0 2
 #StartingPosition: Meran.pgn
-MaxDepth: 12
+MaxDepth: 4
 EngineLines: 3
 EngineThreshold: 0.8
 

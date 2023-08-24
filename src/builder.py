@@ -60,6 +60,8 @@ class RepertoireBuilder:
                 'totGames',
                 'percGames',
                 'engineEval'])
+        
+        self.leaves = []
 
     def __graceful_exit(self, *args):
         """Handler for Ctrl+C (SIGINT) signal."""
@@ -69,7 +71,9 @@ class RepertoireBuilder:
         self.logger.warning("Gracefully exiting...")
 
     def GenerateReportoire(self):
+        
         self.logger.info("START GenerateReportoire()")
+
         self.start_time = time.time()
 
         game, node = self.__setup_initial_position(
@@ -84,13 +88,21 @@ class RepertoireBuilder:
         except KeyboardInterrupt:
             self.__graceful_exit()
 
+        self.logger.info("END GenerateReportoire()")
+
         output_repertoire_file = self.config.PgnName + '.pgn'
         # Salvataggio della partita in formato PGN
         with open(output_repertoire_file, "w") as f:
             exporter = chess.pgn.FileExporter(f)
             game.accept(exporter)
 
-        return self.stats
+        # TODO: stampare le LEAVES come board con background in modo che si veda subito la posizione ed affiancare a ciascuna delle stats
+        # TODO: creare una tabella con un aggregato delle leaves e in generale con un aggregato delle stats fondamentali del repertorio da loggare e da stampare
+        #       --> usare modulo tabulate
+        self.logger.debug("LEAVES")
+        for leaf in self.leaves:
+            self.logger.debug(leaf)
+
 
     def __setup_initial_position(
             self,
@@ -174,6 +186,8 @@ class RepertoireBuilder:
 
         # interrompo la ricerca se raggiungo la profondità massima
         if child_node.ply() > self.config.MaxDepth:
+            full_move_info['fen'] = child_node.board().fen()
+            self.leaves.append(full_move_info)
             self.logger.info("----- MAX DEPTH")
             return
 

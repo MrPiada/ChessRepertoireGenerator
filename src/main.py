@@ -17,7 +17,7 @@ def main():
     options = {'plot': args.plot}
     
     builder = RepertoireBuilder(config, options)
-    stats = builder.GenerateReportoire()
+    builder.GenerateReportoire()
 
 
 if __name__ == '__main__':
