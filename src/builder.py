@@ -10,6 +10,7 @@ from chess.engine import Cp
 from config import StartPositionType
 from utils import Color, align_printables, clear_and_print, format_move_infos, is_uci_move, get_stylish_chessboard
 from stats_plotter import ply_hist, plot_white_perc, plot_engine_eval
+from tabulate import tabulate
 from logger import Logger
 
 GRACEFULL_EXIT = False
@@ -96,12 +97,9 @@ class RepertoireBuilder:
             exporter = chess.pgn.FileExporter(f)
             game.accept(exporter)
 
-        # TODO: stampare le LEAVES come board con background in modo che si veda subito la posizione ed affiancare a ciascuna delle stats
-        # TODO: creare una tabella con un aggregato delle leaves e in generale con un aggregato delle stats fondamentali del repertorio da loggare e da stampare
-        #       --> usare modulo tabulate
-        self.logger.debug("LEAVES")
-        for leaf in self.leaves:
-            self.logger.debug(leaf)
+        leaves_table = tabulate(self.leaves, headers="keys", tablefmt="grid")
+        leaves = "LEAVES\n" + leaves_table
+        self.logger.debug(leaves)
 
 
     def __setup_initial_position(
@@ -125,8 +123,6 @@ class RepertoireBuilder:
 
             elif starting_position_type == StartPositionType.MOVE_LIST:
                 for move in starting_position:
-                    self.logger.debug(f"node: {node}\n move: {move}")
-
                     if is_uci_move(move):
                         node = node.add_variation(
                             chess.Move.from_uci(move))
