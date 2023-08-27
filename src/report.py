@@ -1,13 +1,12 @@
-import pandas as pd
+import os
 
-from config import StartPositionType
 class Report:
     def __init__(self, config, leaves, stats):
         self.config = config
         self.leaves = leaves
-        self.datafrastatsme = stats
+        self.dataframestats = stats
 
-    def compute_scores(self):
+    def __compute_scores(self):
         """
         Calculate weighted average engine evaluation and database score.
 
@@ -19,8 +18,11 @@ class Report:
         weighted_db_score = sum(leaf.get('strongest_practical', 0) * leaf.get('tot_games', 0) for leaf in self.leaves)/total_games_sum
         return weighted_eval, weighted_db_score
 
-    # def display_dicts(self):
-    #     for idx, dictionary in enumerate(self.dict_list, start=1):
-    #         print(f"Dictionary {idx}:")
-    #         for key, value in dictionary.items():
-    #             print(f"  {key}: {value}")
+    def evaluate_repertoire(self):
+        weighted_eval, weighted_db_score = self.__compute_scores()
+        os.system("clear")
+        print("\n  ########## REPORT\n")
+        print(f"  Repertoire: {self.config.PgnName}")
+        print(f"  Engine weighted average score: {weighted_eval:.2f}")
+        print(f"  LichessDB weighted average score: {weighted_db_score:.1f}%")
+        print("\n")

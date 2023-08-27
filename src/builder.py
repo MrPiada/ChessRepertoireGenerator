@@ -12,6 +12,7 @@ from utils import Color, align_printables, clear_and_print, format_move_infos, i
 from stats_plotter import ply_hist, plot_white_perc, plot_engine_eval
 from tabulate import tabulate
 from logger import Logger
+from report import Report
 
 GRACEFULL_EXIT = False
 
@@ -100,6 +101,9 @@ class RepertoireBuilder:
         leaves_table = tabulate(self.leaves, headers="keys", tablefmt="grid")
         leaves = "LEAVES\n" + leaves_table
         self.logger.debug(leaves)
+        
+        report = Report(self.config, self.leaves, self.stats)
+        report.evaluate_repertoire()
 
 
     def __setup_initial_position(
