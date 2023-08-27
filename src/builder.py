@@ -10,7 +10,9 @@ from chess.engine import Cp
 from config import StartPositionType
 from utils import Color, align_printables, clear_and_print, format_move_infos, is_uci_move, get_stylish_chessboard
 from stats_plotter import ply_hist, plot_white_perc, plot_engine_eval
+from tabulate import tabulate
 from logger import Logger
+from report import Report
 
 GRACEFULL_EXIT = False
 
@@ -60,6 +62,8 @@ class RepertoireBuilder:
                 'totGames',
                 'percGames',
                 'engineEval'])
+        
+        self.leaves = []
 
     def __graceful_exit(self, *args):
         """Handler for Ctrl+C (SIGINT) signal."""
@@ -69,7 +73,9 @@ class RepertoireBuilder:
         self.logger.warning("Gracefully exiting...")
 
     def GenerateReportoire(self):
+        
         self.logger.info("START GenerateReportoire()")
+
         self.start_time = time.time()
 
         game, node = self.__setup_initial_position(
@@ -84,13 +90,21 @@ class RepertoireBuilder:
         except KeyboardInterrupt:
             self.__graceful_exit()
 
+        self.logger.info("END GenerateReportoire()")
+
         output_repertoire_file = self.config.PgnName + '.pgn'
         # Salvataggio della partita in formato PGN
         with open(output_repertoire_file, "w") as f:
             exporter = chess.pgn.FileExporter(f)
             game.accept(exporter)
 
-        return self.stats
+        leaves_table = tabulate(self.leaves, headers="keys", tablefmt="grid")
+        leaves = "LEAVES\n" + leaves_table
+        self.logger.debug(leaves)
+        
+        report = Report(self.config, self.leaves, self.stats)
+        report.evaluate_repertoire()
+
 
     def __setup_initial_position(
             self,
@@ -113,8 +127,6 @@ class RepertoireBuilder:
 
             elif starting_position_type == StartPositionType.MOVE_LIST:
                 for move in starting_position:
-                    self.logger.debug(f"node: {node}\n move: {move}")
-
                     if is_uci_move(move):
                         node = node.add_variation(
                             chess.Move.from_uci(move))
@@ -174,6 +186,8 @@ class RepertoireBuilder:
 
         # interrompo la ricerca se raggiungo la profondità massima
         if child_node.ply() > self.config.MaxDepth:
+            full_move_info['fen'] = child_node.board().fen()
+            self.leaves.append(full_move_info)
             self.logger.info("----- MAX DEPTH")
             return
 
