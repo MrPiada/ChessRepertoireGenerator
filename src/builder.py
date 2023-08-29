@@ -193,7 +193,6 @@ class RepertoireBuilder:
             full_move_info['fen'] = child_node.board().fen()
             self.leaves.append(full_move_info)
             self.logger.info("----- MAX DEPTH")
-            OPEN_MOVES -= 1
             return
 
         # ottengo il codice fen della posizione
@@ -229,6 +228,8 @@ class RepertoireBuilder:
                 child_node,
                 m['san'],
                 m)
+        
+        OPEN_MOVES -= len(candidate_moves)
             
     def __get_cloud_eval(self, fen):
         self.api_cloud_eval_params['fen'] = fen
