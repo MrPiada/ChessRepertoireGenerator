@@ -13,11 +13,15 @@ class Report:
         Returns:
             tuple: Weighted average engine evaluation score, weighted average database score.
         """
+        self.leaves = [leaf for leaf in self.leaves if leaf.get('eval', 0) != -99.99]
         total_games_sum = sum(leaf.get('tot_games', 0) for leaf in self.leaves)
-        # TODO: rimuovere valutazione -99.99
-        weighted_eval = sum(leaf.get('eval', 0) * leaf.get('tot_games', 0) for leaf in self.leaves)/total_games_sum
-        weighted_db_score = sum(leaf.get('strongest_practical', 0) * leaf.get('tot_games', 0) for leaf in self.leaves)/total_games_sum
-        return weighted_eval, weighted_db_score
+        if(total_games_sum > 0):
+            # TODO: rimuovere valutazione -99.99
+            weighted_eval = sum(leaf.get('eval', 0) * leaf.get('tot_games', 0) for leaf in self.leaves)/total_games_sum
+            weighted_db_score = sum(leaf.get('strongest_practical', 0) * leaf.get('tot_games', 0) for leaf in self.leaves)/total_games_sum
+            return weighted_eval, weighted_db_score
+        else:
+            return -9999,-9999
 
     def evaluate_repertoire(self):
         weighted_eval, weighted_db_score = self.__compute_scores()

@@ -69,4 +69,4 @@ def plot_open_moves(ui_updates, open_moves, width=35, height=7):
         p.plot(
             ui_updates,
             open_moves,
-            marker='o'))
+            marker='.'))
