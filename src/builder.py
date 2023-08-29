@@ -9,12 +9,14 @@ import pandas as pd
 from chess.engine import Cp
 from config import StartPositionType
 from utils import Color, align_printables, clear_and_print, format_move_infos, is_uci_move, get_stylish_chessboard
-from stats_plotter import ply_hist, plot_white_perc, plot_engine_eval
+from stats_plotter import ply_hist, plot_white_perc, plot_engine_eval, plot_open_moves
 from tabulate import tabulate
 from logger import Logger
 from report import Report
 
 GRACEFULL_EXIT = False
+OPEN_MOVES = 0
+UI_UPDATES = 0
 
 
 class RepertoireBuilder:
@@ -63,6 +65,8 @@ class RepertoireBuilder:
                 'percGames',
                 'engineEval'])
         
+        self.open_moves = []
+        self.ui_updates = []
         self.leaves = []
 
     def __graceful_exit(self, *args):
@@ -160,9 +164,11 @@ class RepertoireBuilder:
             full_move_info=None,
             starting_move=False):
         global GRACEFULL_EXIT
-
         if GRACEFULL_EXIT:
             return
+        
+        global OPEN_MOVES
+        OPEN_MOVES += 1
 
         if starting_move:
             child_node = node
@@ -189,6 +195,7 @@ class RepertoireBuilder:
             full_move_info['fen'] = child_node.board().fen()
             self.leaves.append(full_move_info)
             self.logger.info("----- MAX DEPTH")
+            OPEN_MOVES -= 1
             return
 
         # ottengo il codice fen della posizione
@@ -204,7 +211,6 @@ class RepertoireBuilder:
         self.logger.info(f"#CandidateMoves: {len(candidate_moves)}")
         self.logger.debug(candidate_moves)
         for m in candidate_moves:
-
             self.stats.loc[len(self.stats)] = [
                 child_node.ply() + 1,
                 m['san'],
@@ -222,6 +228,8 @@ class RepertoireBuilder:
                 child_node,
                 m['san'],
                 m)
+            
+        OPEN_MOVES -= 1
 
     def __get_cloud_eval(self, fen):
         self.api_cloud_eval_params['fen'] = fen
@@ -369,14 +377,18 @@ class RepertoireBuilder:
             is_white_repertoire=self.is_white_repertoire)
 
     def __update_UI(self, child_node, move, full_move_info):
-
+        global OPEN_MOVES
+        global UI_UPDATES
+        
+        self.open_moves.append(OPEN_MOVES)
+        self.ui_updates.append(UI_UPDATES)
+        
         board_info = format_move_infos(
             self.start_time, child_node, move, full_move_info)
-
         board = str(child_node.board())
         board = get_stylish_chessboard(board)
-        board_and_info = align_printables([board, board_info])
-
+        open_moves_plot = plot_open_moves(self.ui_updates, self.open_moves)
+        board_and_info = align_printables([board, board_info, open_moves_plot])
         clear_and_print(board_and_info)
 
         if self.options['plot']:
@@ -389,3 +401,5 @@ class RepertoireBuilder:
             plots = align_printables(
                 [white_perc_plot, engine_eval_plot, move_hist])
             print(plots)
+            
+        UI_UPDATES += 1

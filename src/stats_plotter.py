@@ -56,3 +56,17 @@ def plot_engine_eval(stats, width=30, height=20, max_depth=10):
                 marker='o'))
     else:
         return ''
+
+
+def plot_open_moves(ui_updates, open_moves, width=35, height=7):
+    p = AFigure(
+    shape=(
+        width,
+        height),
+    ylabel=('open moves'), xticks_to_int=True, yticks_to_int=True)
+    
+    return (
+        p.plot(
+            ui_updates,
+            open_moves,
+            marker='o'))

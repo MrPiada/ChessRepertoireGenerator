@@ -14,6 +14,7 @@ class Report:
             tuple: Weighted average engine evaluation score, weighted average database score.
         """
         total_games_sum = sum(leaf.get('tot_games', 0) for leaf in self.leaves)
+        # TODO: rimuovere valutazione -99.99
         weighted_eval = sum(leaf.get('eval', 0) * leaf.get('tot_games', 0) for leaf in self.leaves)/total_games_sum
         weighted_db_score = sum(leaf.get('strongest_practical', 0) * leaf.get('tot_games', 0) for leaf in self.leaves)/total_games_sum
         return weighted_eval, weighted_db_score
