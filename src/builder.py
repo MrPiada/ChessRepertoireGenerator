@@ -163,13 +163,11 @@ class RepertoireBuilder:
             move_san,
             full_move_info=None,
             starting_move=False):
+        global OPEN_MOVES
         global GRACEFULL_EXIT
         if GRACEFULL_EXIT:
             return
         
-        global OPEN_MOVES
-        OPEN_MOVES += 1
-
         if starting_move:
             child_node = node
         else:
@@ -210,6 +208,9 @@ class RepertoireBuilder:
         candidate_moves = self.__get_candidate_moves(child_node, tree)
         self.logger.info(f"#CandidateMoves: {len(candidate_moves)}")
         self.logger.debug(candidate_moves)
+        
+        OPEN_MOVES += len(candidate_moves)
+        
         for m in candidate_moves:
             self.stats.loc[len(self.stats)] = [
                 child_node.ply() + 1,
@@ -229,8 +230,6 @@ class RepertoireBuilder:
                 m['san'],
                 m)
             
-        OPEN_MOVES -= 1
-
     def __get_cloud_eval(self, fen):
         self.api_cloud_eval_params['fen'] = fen
         response = self.session.get(
