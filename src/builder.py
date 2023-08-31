@@ -68,6 +68,7 @@ class RepertoireBuilder:
         self.open_moves = []
         self.ui_updates = []
         self.leaves = []
+        self.nodes_fen = []
 
     def __graceful_exit(self, *args):
         """Handler for Ctrl+C (SIGINT) signal."""
@@ -181,6 +182,8 @@ class RepertoireBuilder:
         # TODO: implement smart move comments
         # child_node.comment = move_comment
         engine_eval = self.__get_cloud_eval(child_node.board().fen())
+        
+        self.nodes_fen.append(child_node.board().fen())
 
         if engine_eval != -9999:
             child_node.set_eval(
@@ -211,6 +214,10 @@ class RepertoireBuilder:
         OPEN_MOVES += len(candidate_moves)
         
         for m in candidate_moves:
+            
+            if self.__check_for_transposition(m['san'], child_node):
+                self.logger.debug(f"transposition: move {m['san']} already analyzed")
+            
             self.stats.loc[len(self.stats)] = [
                 child_node.ply() + 1,
                 m['san'],
@@ -403,3 +410,11 @@ class RepertoireBuilder:
             print(plots)
             
         UI_UPDATES += 1
+        
+    def __check_for_transposition(self, move_san, child_node):
+        board = child_node.board()
+        board.push_san(move_san)
+        fen_position = board.fen()
+        if fen_position in self.nodes_fen:
+            return True
+
