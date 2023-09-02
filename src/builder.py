@@ -43,6 +43,7 @@ class RepertoireBuilder:
 
         self.starting_position = self.config.StartingPosition
         self.starting_position_type = self.config.StartingPositionType
+        self.min_games = self.config.MinNumberOfGames
 
         self.start_time = 0
 
@@ -217,6 +218,9 @@ class RepertoireBuilder:
             
             if self.__check_for_transposition(m['san'], child_node):
                 self.logger.debug(f"transposition: move {m['san']} already analyzed")
+                
+            if m['tot_games'] < self.min_games:
+                self.logger.debug(f"not enough games ({m['tot_games']}) for move {m['san']}")
             
             self.stats.loc[len(self.stats)] = [
                 child_node.ply() + 1,
