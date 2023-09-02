@@ -5,15 +5,15 @@ speeds:
 ratings:
   - 2000
   - 2200
-PgnName: EnglishOpening
+PgnName: SodiumAttack
 Color: White
-#StartingPosition: Na3
-StartingPosition: c2c4
+StartingPosition: Na3
+#StartingPosition: c2c4
 #StartingPosition: [e4, c6]
 #StartingPosition: rnbqkbnr/pp1ppppp/2p5/8/4P3/8/PPPP1PPP/RNBQKBNR w KQkq - 0 2
 #StartingPosition: Meran.pgn
 MaxDepth: 10
 EngineLines: 3
 EngineThreshold: 0.8
-
 FreqThreshold: 70
+MinNumberOfGames: 10

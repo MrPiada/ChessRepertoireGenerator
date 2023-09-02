@@ -48,6 +48,8 @@ class Config:
 
         self.StartingPosition, self.StartingPositionType = self.__parse_starting_position(
             config_data.get('StartingPosition'))
+        
+        self.MinNumberOfGames = config_data.get('MinNumberOfGames', None)
 
     def __parse_starting_position(self, starting_position):
         starting_position_type = None
