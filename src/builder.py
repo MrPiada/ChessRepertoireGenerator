@@ -11,6 +11,7 @@ from config import StartPositionType
 from utils import Color, align_printables, clear_and_print, format_move_infos, is_uci_move, get_stylish_chessboard
 from stats_plotter import ply_hist, plot_white_perc, plot_engine_eval, plot_open_moves
 from tabulate import tabulate
+from tqdm import tqdm
 from logger import Logger
 from report import Report
 
@@ -180,12 +181,12 @@ class RepertoireBuilder:
         self.logger.info(
             f"__make_move(move:{move}, node:{node}, move_san:{move_san}, full_move_info:{full_move_info}, starting_move:{starting_move})")
         self.__update_UI(child_node, move_san, full_move_info)
-    
+
         self.nodes_fen.append(child_node.board().fen())
-        
+
         if move_comment is not None:
             child_node.comment = move_comment
-            
+
         engine_eval = self.__get_cloud_eval(child_node.board().fen())
         if engine_eval != -9999:
             child_node.set_eval(
@@ -204,7 +205,8 @@ class RepertoireBuilder:
         self.api_db_params["fen"] = child_node.board().fen()
 
         # eseguo la chiamata all'API lichess
-        response = self.session.get(self.api_db_url, params=self.api_db_params)
+        response = self.__ask_lichess_api(
+            self.api_db_url, self.api_db_params)
 
         # parsing della response
         tree = json.loads(response.content.decode())
@@ -248,9 +250,9 @@ class RepertoireBuilder:
 
     def __get_cloud_eval(self, fen):
         self.api_cloud_eval_params['fen'] = fen
-        response = self.session.get(
+        response = self.__ask_lichess_api(
             self.api_cloud_eval_url,
-            params=self.api_cloud_eval_params)
+            self.api_cloud_eval_params)
 
         tree = json.loads(response.content.decode())
         # Se esiste la valutazione in cloud della mossa
@@ -265,7 +267,7 @@ class RepertoireBuilder:
         move['comment'] = None
 
         comment = None
-        
+
         if is_player_turn:
             rare_move = move['perc'] < 10
             excellent_score = move['strongest_practical'] > 70
@@ -276,8 +278,8 @@ class RepertoireBuilder:
             if rare_move:
                 comment += f"\nrare move ({move['perc']}%)"
             if excellent_score:
-                comment += f"\nexcellent score ({move['strongest_practical']})"            
-                
+                comment += f"\nexcellent score ({move['strongest_practical']})"
+
         if not is_player_turn:
             common_move = move['perc'] > 50
             bad_score = move['strongest_practical'] < 30
@@ -289,7 +291,7 @@ class RepertoireBuilder:
                 comment += f"\ncommon move ({move['perc']}%)"
             if bad_score:
                 comment += f"\nbad score ({move['strongest_practical']})"
-            
+
         move['comment'] = comment
 
     def __compute_evaluations(self, node, tree_move, total_games):
@@ -365,7 +367,7 @@ class RepertoireBuilder:
                 self.__set_move_comment(m, is_player_turn)
                 if perc_sum > self.config.FreqThreshold:
                     return ret_moves
-        
+
         return ret_moves
 
     def __get_candidate_moves(self, node, tree):
@@ -448,3 +450,28 @@ class RepertoireBuilder:
         fen_position = board.fen()
         if fen_position in self.nodes_fen:
             return True
+
+    def __ask_lichess_api(self, api_url, api_params):
+        global GRACEFULL_EXIT
+
+        response = self.session.get(api_url, params=api_params)
+        retries = 0
+        while (response.status_code == 429):
+            if GRACEFULL_EXIT:
+                return None
+            
+            if retries == 3:
+                self.logger.error("Max number of retries")
+                raise KeyboardInterrupt
+            self.logger.warning("Request timeout")
+            
+            duration = 100
+            with tqdm(total=duration, desc="Wait (100s)") as pbar:
+                for _ in range(duration):
+                    if GRACEFULL_EXIT:
+                        return None
+                    time.sleep(1)  # Attendi per 1 secondo
+                    pbar.update(1)  # Aggiorna la barra di caricamento di 1 secondo
+            
+            retries += 1
+        return response

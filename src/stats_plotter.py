@@ -34,7 +34,7 @@ def plot_white_perc(stats, width=30, height=20, max_depth=10):
             p.plot(
                 white_perc_data.index,
                 white_perc_data['mean'],
-                marker='o'))
+                marker='_.'))
     else:
         return ''
 
@@ -53,7 +53,7 @@ def plot_engine_eval(stats, width=30, height=20, max_depth=10):
             p.plot(
                 engine_eval_data.index,
                 engine_eval_data['mean'],
-                marker='o'))
+                marker='_.'))
     else:
         return ''
 
@@ -69,4 +69,4 @@ def plot_open_moves(ui_updates, open_moves, width=35, height=7):
         p.plot(
             ui_updates,
             open_moves,
-            marker='.'))
+            marker='_.'))
