@@ -6,12 +6,13 @@ from tabulate import tabulate
 from colorama import Back, init, Style
 
 CHESS_SYMBOLS = {
-        'r': '♖', 'n': '♘', 'b': '♗', 'q': '♕', 'k': '♔', 'p': '♙',
-        'R': '♜', 'N': '♞', 'B': '♝', 'Q': '♛', 'K': '♚', 'P': '♟',
-        '.': ' '
-    }
-BOARD_SYMBOLS = "rnbqkpRNBQKP."  
-TRANSLATOR = BOARD_SYMBOLS.maketrans(CHESS_SYMBOLS) 
+    'r': '♖', 'n': '♘', 'b': '♗', 'q': '♕', 'k': '♔', 'p': '♙',
+    'R': '♜', 'N': '♞', 'B': '♝', 'Q': '♛', 'K': '♚', 'P': '♟',
+    '.': ' '
+}
+BOARD_SYMBOLS = "rnbqkpRNBQKP."
+TRANSLATOR = BOARD_SYMBOLS.maketrans(CHESS_SYMBOLS)
+
 
 class Color(Enum):
     WHITE = 0
