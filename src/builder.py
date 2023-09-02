@@ -49,7 +49,7 @@ class RepertoireBuilder:
 
         logfile_name = self.config.PgnName
         self.logger = Logger(logfile_name)
-        
+
         self.options = options
 
         self.session = requests.Session()
@@ -65,7 +65,7 @@ class RepertoireBuilder:
                 'totGames',
                 'percGames',
                 'engineEval'])
-        
+
         self.open_moves = []
         self.ui_updates = []
         self.leaves = []
@@ -79,7 +79,7 @@ class RepertoireBuilder:
         self.logger.warning("Gracefully exiting...")
 
     def GenerateReportoire(self):
-        
+
         self.logger.info("START GenerateReportoire()")
 
         self.start_time = time.time()
@@ -92,6 +92,7 @@ class RepertoireBuilder:
                 "",
                 node,
                 "Starting move",
+                None,
                 starting_move=True)
         except KeyboardInterrupt:
             self.__graceful_exit()
@@ -107,10 +108,9 @@ class RepertoireBuilder:
         leaves_table = tabulate(self.leaves, headers="keys", tablefmt="grid")
         leaves = "LEAVES\n" + leaves_table
         self.logger.debug(leaves)
-        
+
         report = Report(self.config, self.leaves, self.stats)
         report.evaluate_repertoire()
-
 
     def __setup_initial_position(
             self,
@@ -163,13 +163,14 @@ class RepertoireBuilder:
             move,
             node,
             move_san,
+            move_comment,
             full_move_info=None,
             starting_move=False):
         global OPEN_MOVES
         global GRACEFULL_EXIT
         if GRACEFULL_EXIT:
             return
-        
+
         if starting_move:
             child_node = node
         else:
@@ -179,13 +180,13 @@ class RepertoireBuilder:
         self.logger.info(
             f"__make_move(move:{move}, node:{node}, move_san:{move_san}, full_move_info:{full_move_info}, starting_move:{starting_move})")
         self.__update_UI(child_node, move_san, full_move_info)
-
-        # TODO: implement smart move comments
-        # child_node.comment = move_comment
-        engine_eval = self.__get_cloud_eval(child_node.board().fen())
-        
+    
         self.nodes_fen.append(child_node.board().fen())
-
+        
+        if move_comment is not None:
+            child_node.comment = move_comment
+            
+        engine_eval = self.__get_cloud_eval(child_node.board().fen())
         if engine_eval != -9999:
             child_node.set_eval(
                 chess.engine.PovScore(
@@ -211,17 +212,19 @@ class RepertoireBuilder:
         candidate_moves = self.__get_candidate_moves(child_node, tree)
         self.logger.info(f"#CandidateMoves: {len(candidate_moves)}")
         self.logger.debug(candidate_moves)
-        
+
         OPEN_MOVES += len(candidate_moves)
-        
+
         for m in candidate_moves:
-            
+
             if self.__check_for_transposition(m['san'], child_node):
-                self.logger.debug(f"transposition: move {m['san']} already analyzed")
-                
+                self.logger.debug(
+                    f"transposition: move {m['san']} already analyzed")
+
             if m['tot_games'] < self.min_games:
-                self.logger.debug(f"not enough games ({m['tot_games']}) for move {m['san']}")
-            
+                self.logger.debug(
+                    f"not enough games ({m['tot_games']}) for move {m['san']}")
+
             self.stats.loc[len(self.stats)] = [
                 child_node.ply() + 1,
                 m['san'],
@@ -238,10 +241,11 @@ class RepertoireBuilder:
                 m['uci'],
                 child_node,
                 m['san'],
+                m['comment'],
                 m)
-        
+
         OPEN_MOVES -= len(candidate_moves)
-            
+
     def __get_cloud_eval(self, fen):
         self.api_cloud_eval_params['fen'] = fen
         response = self.session.get(
@@ -257,14 +261,35 @@ class RepertoireBuilder:
 
         return -9999
 
-    # TODO: refactor to build SMART move comments
-    # (https://github.com/MrPiada/ChessRepertoireGenerator/issues/18)
+    def __set_move_comment(self, move, is_player_turn):
+        move['comment'] = None
 
-    def __set_move_comment(self, move):
-        if move['eval'] != -99.99:
-            comment = f"{move['perc']}% ({move['tot_games']}) -- {move['eval']} -- {move['white']}/{move['draws']}/{move['black']}"
-        else:
-            comment = f"{move['perc']}% ({move['tot_games']}) -- {move['white']}/{move['draws']}/{move['black']}"
+        comment = None
+        
+        if is_player_turn:
+            rare_move = move['perc'] < 10
+            excellent_score = move['strongest_practical'] > 70
+            if rare_move or excellent_score:
+                comment = ""
+            if rare_move and excellent_score:
+                comment += "!"
+            if rare_move:
+                comment += f"\nrare move ({move['perc']}%)"
+            if excellent_score:
+                comment += f"\nexcellent score ({move['strongest_practical']})"            
+                
+        if not is_player_turn:
+            common_move = move['perc'] > 50
+            bad_score = move['strongest_practical'] < 30
+            if common_move or bad_score:
+                comment = ""
+            if common_move and bad_score:
+                comment += "?"
+            if common_move:
+                comment += f"\ncommon move ({move['perc']}%)"
+            if bad_score:
+                comment += f"\nbad score ({move['strongest_practical']})"
+            
         move['comment'] = comment
 
     def __compute_evaluations(self, node, tree_move, total_games):
@@ -288,8 +313,6 @@ class RepertoireBuilder:
         fen = new_board.fen()
 
         tree_move['eval'] = self.__get_cloud_eval(fen) / 100.
-
-        self.__set_move_comment(tree_move)
 
     def __filter_moves(self, move_list, is_white_to_move, is_white_repertoire):
         """filtra le mosse per trovare o le candidate per il giocatore oppure quelle da considerare dagli avversari
@@ -317,12 +340,15 @@ class RepertoireBuilder:
                 if m['eval'] != -9999:
                     # scarto la mossa non è tra le prime tre del motore
                     if m["eval_pos"] > self.config.EngineLines:
+                        self.__set_move_comment(m, is_player_turn)
                         continue
                     # scarto la mossa ha una valutazione del motore non accettabile (<
                     # -1 e tocca la bianco o > 1 e tocca al nero)
                     if (is_white_to_move and m['eval'] < - self.config.EngineThreshold) or (
                             not is_white_to_move and m['eval'] > self.config.EngineThreshold):
+                        self.__set_move_comment(m, is_player_turn)
                         continue
+                self.__set_move_comment(m, is_player_turn)
                 ret_moves.append(m)
                 return ret_moves  # se tocca al giocatore considero solo una mossa alla volta
         else:
@@ -336,9 +362,10 @@ class RepertoireBuilder:
                 perc_sum += m["perc"]
                 # considero mosse fino al punto in cui ho coperto almeno l'80%
                 # delle mosse giocate
+                self.__set_move_comment(m, is_player_turn)
                 if perc_sum > self.config.FreqThreshold:
                     return ret_moves
-
+        
         return ret_moves
 
     def __get_candidate_moves(self, node, tree):
@@ -390,10 +417,10 @@ class RepertoireBuilder:
     def __update_UI(self, child_node, move, full_move_info):
         global OPEN_MOVES
         global UI_UPDATES
-        
+
         self.open_moves.append(OPEN_MOVES)
         self.ui_updates.append(UI_UPDATES)
-        
+
         board_info = format_move_infos(
             self.start_time, child_node, move, full_move_info)
         board = str(child_node.board())
@@ -412,13 +439,12 @@ class RepertoireBuilder:
             plots = align_printables(
                 [white_perc_plot, engine_eval_plot, move_hist])
             print(plots)
-            
+
         UI_UPDATES += 1
-        
+
     def __check_for_transposition(self, move_san, child_node):
         board = child_node.board()
         board.push_san(move_san)
         fen_position = board.fen()
         if fen_position in self.nodes_fen:
             return True
-

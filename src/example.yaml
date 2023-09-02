@@ -3,17 +3,17 @@ speeds:
   - blitz
   - rapid
 ratings:
-  - 2000
   - 2200
-PgnName: SodiumAttack
+  - 2500
+PgnName: test_Branca
 Color: White
-StartingPosition: Na3
+#StartingPosition: Nc3
 #StartingPosition: c2c4
 #StartingPosition: [e4, c6]
 #StartingPosition: rnbqkbnr/pp1ppppp/2p5/8/4P3/8/PPPP1PPP/RNBQKBNR w KQkq - 0 2
-#StartingPosition: Meran.pgn
-MaxDepth: 10
+StartingPosition: Weiss_Schwarz.pgn
+MaxDepth: 20
 EngineLines: 3
-EngineThreshold: 0.8
+EngineThreshold: 0.5
 FreqThreshold: 70
 MinNumberOfGames: 10
