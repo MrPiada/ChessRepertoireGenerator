@@ -11,7 +11,6 @@ from config import StartPositionType
 from utils import Color, align_printables, clear_and_print, format_move_infos, is_uci_move, get_stylish_chessboard
 from stats_plotter import ply_hist, plot_white_perc, plot_engine_eval, plot_open_moves
 from tabulate import tabulate
-from tqdm import tqdm
 from logger import Logger
 from report import Report
 
@@ -453,8 +452,10 @@ class RepertoireBuilder:
 
     def __ask_lichess_api(self, api_url, api_params):
         global GRACEFULL_EXIT
-        
-        time.sleep(0.5) #reduce the request rate to delay the ip ban...no better solution for the moment
+
+        # reduce the request rate to delay the ip ban...no better solution for
+        # the moment
+        time.sleep(0.5)
         response = self.session.get(api_url, params=api_params)
         if response.status_code == 429:
             self.logger.error("Request timeout")
