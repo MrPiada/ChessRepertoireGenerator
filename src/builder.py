@@ -193,12 +193,6 @@ class RepertoireBuilder:
                     Cp(engine_eval),
                     chess.WHITE))
 
-        # interrompo la ricerca se raggiungo la profondità massima
-        if child_node.ply() > self.config.MaxDepth:
-            full_move_info['fen'] = child_node.board().fen()
-            self.leaves.append(full_move_info)
-            self.logger.info("----- MAX DEPTH")
-            return
 
         # ottengo il codice fen della posizione
         self.api_db_params["fen"] = child_node.board().fen()
@@ -213,6 +207,19 @@ class RepertoireBuilder:
         candidate_moves = self.__get_candidate_moves(child_node, tree)
         self.logger.info(f"#CandidateMoves: {len(candidate_moves)}")
         self.logger.debug(candidate_moves)
+        
+        # interrompo la ricerca se raggiungo la profondità massima
+        if child_node.ply() > self.config.MaxDepth and len(candidate_moves) > 1:
+            full_move_info['fen'] = child_node.board().fen()
+            self.leaves.append(full_move_info)
+            self.logger.info("----- MAX DEPTH")
+            return
+        
+        if child_node.ply() > self.config.MaxDepth and len(candidate_moves) == 1:
+            self.logger.info("Only one candidates: keep going even if max deptht")
+            
+        if len(candidate_moves) == 0:
+            self.logger.info("No candidates moves")
 
         OPEN_MOVES += len(candidate_moves)
 
