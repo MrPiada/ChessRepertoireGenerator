@@ -453,25 +453,11 @@ class RepertoireBuilder:
 
     def __ask_lichess_api(self, api_url, api_params):
         global GRACEFULL_EXIT
-
+        
+        time.sleep(0.5) #reduce the request rate to delay the ip ban...no better solution for the moment
         response = self.session.get(api_url, params=api_params)
-        retries = 0
-        while (response.status_code == 429):
-            if GRACEFULL_EXIT:
-                return None
-            
-            if retries == 3:
-                self.logger.error("Max number of retries")
-                raise KeyboardInterrupt
-            self.logger.warning("Request timeout")
-            
-            duration = 100
-            with tqdm(total=duration, desc="Wait (100s)") as pbar:
-                for _ in range(duration):
-                    if GRACEFULL_EXIT:
-                        return None
-                    time.sleep(1)  # Attendi per 1 secondo
-                    pbar.update(1)  # Aggiorna la barra di caricamento di 1 secondo
-            
-            retries += 1
-        return response
+        if response.status_code == 429:
+            self.logger.error("Request timeout")
+            raise KeyboardInterrupt
+        else:
+            return response

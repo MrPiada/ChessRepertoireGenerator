@@ -3,17 +3,13 @@ speeds:
   - blitz
   - rapid
 ratings:
+  - 2000
   - 2200
-  - 2500
-PgnName: test_Branca
-Color: White
-#StartingPosition: Nc3
-#StartingPosition: c2c4
-#StartingPosition: [e4, c6]
-#StartingPosition: rnbqkbnr/pp1ppppp/2p5/8/4P3/8/PPPP1PPP/RNBQKBNR w KQkq - 0 2
-StartingPosition: Weiss_Schwarz.pgn
+PgnName: Sicilian
+Color: Black
+StartingPosition: [e4, c5]
 MaxDepth: 20
 EngineLines: 3
 EngineThreshold: 0.5
 FreqThreshold: 70
-MinNumberOfGames: 10
+MinNumberOfGames: 3
