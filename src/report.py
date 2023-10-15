@@ -18,6 +18,7 @@ class Report:
             leaf for leaf in self.leaves if leaf.get(
                 'eval', 0) != -99.99]
         total_games_sum = sum(leaf.get('tot_games', 0) for leaf in self.leaves)
+
         if (total_games_sum > 0):
             # TODO: rimuovere valutazione -99.99
             weighted_eval = sum(leaf.get('eval', 0) * leaf.get('tot_games', 0)
@@ -28,14 +29,17 @@ class Report:
                     0) * leaf.get(
                     'tot_games',
                     0) for leaf in self.leaves) / total_games_sum
-            return weighted_eval, weighted_db_score
+            return weighted_eval, weighted_db_score, total_games_sum
         else:
-            return -9999, -9999
+            return -9999, -9999, -9999
 
     def evaluate_repertoire(self):
-        weighted_eval, weighted_db_score = self.__compute_scores()
+        weighted_eval, weighted_db_score, total_games_sum = self.__compute_scores()
         os.system("clear")
         print("\n  ########## REPORT\n")
+
+        print(f"REPORT: total_games_sum: {total_games_sum}")
+
         print(f"  Repertoire: {self.config.PgnName}")
         print(f"  Engine weighted average score: {weighted_eval:.2f}")
         print(f"  LichessDB weighted average score: {weighted_db_score:.1f}%")

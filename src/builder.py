@@ -8,7 +8,7 @@ import pandas as pd
 
 from chess.engine import Cp
 from config import StartPositionType
-from utils import Color, align_printables, clear_and_print, format_move_infos, is_uci_move, get_stylish_chessboard
+from utils import Color, align_printables, clear_and_print, format_move_infos, is_uci_move, get_stylish_chessboard, compute_adaptive_FreqThreshold
 from stats_plotter import ply_hist, plot_white_perc, plot_engine_eval, plot_open_moves
 from tabulate import tabulate
 from logger import Logger
@@ -178,7 +178,7 @@ class RepertoireBuilder:
             child_node = node.add_variation(chess.Move.from_uci(move))
 
         self.logger.info(
-            f"__make_move(move:{move}, node:{node}, move_san:{move_san}, full_move_info:{full_move_info}, starting_move:{starting_move})")
+            f"__make_move({move}\t #leaves:{len(self.leaves)})")
         self.__update_UI(child_node, move_san, full_move_info)
 
         self.nodes_fen.append(child_node.board().fen())
@@ -193,7 +193,6 @@ class RepertoireBuilder:
                     Cp(engine_eval),
                     chess.WHITE))
 
-
         # ottengo il codice fen della posizione
         self.api_db_params["fen"] = child_node.board().fen()
 
@@ -207,17 +206,14 @@ class RepertoireBuilder:
         candidate_moves = self.__get_candidate_moves(child_node, tree)
         self.logger.info(f"#CandidateMoves: {len(candidate_moves)}")
         self.logger.debug(candidate_moves)
-        
+
         # interrompo la ricerca se raggiungo la profondità massima
-        if child_node.ply() > self.config.MaxDepth and len(candidate_moves) > 1:
+        if child_node.ply() > self.config.MaxDepth:
             full_move_info['fen'] = child_node.board().fen()
             self.leaves.append(full_move_info)
             self.logger.info("----- MAX DEPTH")
             return
-        
-        if child_node.ply() > self.config.MaxDepth and len(candidate_moves) == 1:
-            self.logger.info("Only one candidates: keep going even if max deptht")
-            
+
         if len(candidate_moves) == 0:
             self.logger.info("No candidates moves")
 
@@ -253,6 +249,9 @@ class RepertoireBuilder:
                 m)
 
         OPEN_MOVES -= len(candidate_moves)
+        
+        full_move_info['fen'] = child_node.board().fen()
+        self.leaves.append(full_move_info)
 
     def __get_cloud_eval(self, fen):
         self.api_cloud_eval_params['fen'] = fen
@@ -322,11 +321,17 @@ class RepertoireBuilder:
 
         tree_move['eval'] = self.__get_cloud_eval(fen) / 100.
 
-    def __filter_moves(self, move_list, is_white_to_move, is_white_repertoire):
+    def __filter_moves(
+            self,
+            move_list,
+            ply,
+            is_white_to_move,
+            is_white_repertoire):
         """filtra le mosse per trovare o le candidate per il giocatore oppure quelle da considerare dagli avversari
 
         Args:
             move_list (list): tree['moves']
+            ply: child_node.ply()
             is_white_to_move (bool): deve muovere il bianco ?
             is_white_repertoire (bool): booleano che indica se si sta costruendo un repertorio per il bianco o per il nero
 
@@ -365,13 +370,20 @@ class RepertoireBuilder:
                 key=lambda x: x["perc"],
                 reverse=True)
             perc_sum = 0
+            freq_thr = self.config.FreqThreshold
+            if self.options['adaptive']:
+                freq_thr = compute_adaptive_FreqThreshold(
+                    ply, freq_thr, self.config.MaxDepth)
+                self.logger.debug(
+                    f"adaptive freq thr = {freq_thr}\t ply:{ply}, FreqThreshold:{self.config.FreqThreshold}, MaxDepth:{self.config.MaxDepth}")
+
             for m in sorted_moves:
                 ret_moves.append(m)
                 perc_sum += m["perc"]
                 # considero mosse fino al punto in cui ho coperto almeno l'80%
                 # delle mosse giocate
                 self.__set_move_comment(m, is_player_turn)
-                if perc_sum > self.config.FreqThreshold:
+                if perc_sum > freq_thr:
                     return ret_moves
 
         return ret_moves
@@ -419,6 +431,7 @@ class RepertoireBuilder:
 
         return self.__filter_moves(
             evalutad_moves,
+            node.ply(),
             is_white_to_move=is_white_to_move,
             is_white_repertoire=self.is_white_repertoire)
 

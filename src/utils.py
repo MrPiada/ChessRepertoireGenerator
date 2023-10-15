@@ -52,6 +52,14 @@ def clear_and_print(snapshot):
     print(snapshot)
 
 
+def compute_adaptive_FreqThreshold(ply, FreqThreshold, MaxDepth):
+    if ply >= MaxDepth:
+        return 20
+    else:
+        slope = (20 - FreqThreshold) / MaxDepth
+        return FreqThreshold + slope * ply
+
+
 def format_move_infos(start_time, child_node, move, full_move_info):
 
     elapsed_time = time.time() - start_time

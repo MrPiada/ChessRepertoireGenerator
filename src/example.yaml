@@ -3,13 +3,14 @@ speeds:
   - blitz
   - rapid
 ratings:
+  - 1800
   - 2000
   - 2200
-PgnName: Sicilian
+PgnName: French
 Color: Black
-StartingPosition: [e4, c5]
-MaxDepth: 20
+StartingPosition: [e4, e6]
+MaxDepth: 5
 EngineLines: 3
 EngineThreshold: 0.5
-FreqThreshold: 70
+FreqThreshold: 95
 MinNumberOfGames: 3
